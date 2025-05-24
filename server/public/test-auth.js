@@ -1,7 +1,8 @@
 let token = "";
+const PORT = 8080;
 
 async function login() {
-  const res = await fetch("http://localhost:3001/auth/login", {
+  const res = await fetch(`http://localhost:${PORT}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -25,7 +26,7 @@ function logout() {
 
 async function fetchMessages() {
   const savedToken = token || localStorage.getItem("jwt");
-  const res = await fetch("http://localhost:3001/api/messages", {
+  const res = await fetch(`http://localhost:${PORT}/api/messages`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${savedToken}`,
@@ -47,7 +48,7 @@ async function sendMessage() {
   const token = localStorage.getItem("jwt");
   const message = document.getElementById("message").value;
 
-  const res = await fetch("http://localhost:3001/api/chat", {
+  const res = await fetch(`http://localhost:${PORT}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
