@@ -44,6 +44,7 @@ async function fetchMessages() {
   document.getElementById("output").innerText =
     "🧠 Messages:\n\n" + JSON.stringify(data, null, 2);
 }
+
 async function sendMessage() {
   const token = localStorage.getItem("jwt");
   const message = document.getElementById("message").value;
@@ -62,3 +63,40 @@ async function sendMessage() {
     "chat"
   ).innerText += `You: ${message}\nGPT: ${data.reply}\n`;
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("generateFromHistory").onclick = async function () {
+    try {
+      const savedToken = localStorage.getItem("jwt");
+
+      const res = await fetch("/api/diary/from-history", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + savedToken, // JWT 토큰 필요
+        },
+      });
+
+      const contentType = res.headers.get("content-type");
+
+      if (!res.ok) {
+        // JSON 에러 처리
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await res.json();
+          alert("에러: " + (errorData.error || "알 수 없는 오류"));
+        } else {
+          const text = await res.text();
+          alert("서버 오류: " + text);
+        }
+        return;
+      }
+
+      const data = await res.json();
+      console.log(data);
+      document.getElementById("diarySummary").innerHTML = data.reply;
+    } catch (err) {
+      console.error("Fetch error:", err);
+      alert("네트워크 오류 또는 서버 응답 실패");
+    }
+  };
+});

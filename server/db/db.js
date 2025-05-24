@@ -2,7 +2,6 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
-// DB 파일 경로 설정 (루트 디렉토리에 users.db 생성됨)
 const db = new sqlite3.Database(
   path.resolve(__dirname, "../users.db"),
   (err) => {
@@ -14,8 +13,8 @@ const db = new sqlite3.Database(
   }
 );
 
-// 사용자 테이블 생성 (최초 1회 실행됨)
 db.serialize(() => {
+  // 사용자 테이블
   db.run(
     `
     CREATE TABLE IF NOT EXISTS users (
@@ -29,7 +28,49 @@ db.serialize(() => {
       if (err) {
         console.error("Failed to create users table:", err.message);
       } else {
-        console.log("users.db is ready.");
+        console.log("✅ users table ready.");
+      }
+    }
+  );
+
+  // 메시지 테이블 (chat.js 용)
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      role TEXT,
+      content TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+  `,
+    (err) => {
+      if (err) {
+        console.error("Failed to create messages table:", err.message);
+      } else {
+        console.log("✅ messages table ready.");
+      }
+    }
+  );
+
+  // 📘 일기 테이블
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS diaries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      content TEXT,
+      summary TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+  `,
+    (err) => {
+      if (err) {
+        console.error("Failed to create diaries table:", err.message);
+      } else {
+        console.log("✅ diaries table ready.");
       }
     }
   );

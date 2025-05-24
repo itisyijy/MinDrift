@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Login Test</title>
+    <title>Diary Test</title>
     <script src="test-auth.js"></script>
   </head>
   <body>
@@ -12,8 +12,18 @@
     <button onclick="login()">Login</button>
     <button onclick="logout()">Logout</button>
 
-    <h2>Test Chat API</h2>
-    <h3>Send Message</h3>
+    <hr />
+
+    <h2>✍️ Write Diary</h2>
+    <button id="generateFromHistory">📝 대화 기록 기반 자동 일기</button>
+    <div id="diarySummary"></div>
+
+    <h3>📄 AI Generated Diary Summary</h3>
+    <div id="diaryResult"></div>
+
+    <hr />
+
+    <h2>🧠 Chat</h2>
     <input type="text" id="message" placeholder="Type a message" />
     <button onclick="sendMessage()">Send</button>
 

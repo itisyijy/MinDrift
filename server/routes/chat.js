@@ -27,14 +27,23 @@ router.post("/chat", authenticateToken, async (req, res) => {
       );
     });
 
+    const systemPrompt = {
+      role: "system",
+      content: `역할: 감정 중심 일기 코치. 목표: 사용자의 하루 감정·사건 파악, 일기 쓰기 위한 정보 취득. 방식: 공감·질문 중심 응답, 단답·기계 어투 금지. 감정적 유대.`,
+    };
+
     // 2. 사용자 메시지 추가
-    const updatedMessages = [...history, { role: "user", content: message }];
+    const updatedMessages = [
+      systemPrompt,
+      ...history,
+      { role: "user", content: message },
+    ];
 
     // 3. GPT 호출 (v4 기준)
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: updatedMessages,
-      max_tokens: 300,
+      max_tokens: 600,
     });
 
     const reply = completion.choices[0].message.content;
