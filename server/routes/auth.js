@@ -1,22 +1,19 @@
 const express = require("express");
-const passport = require("passport");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const db = require("../db/db");
 
 const router = express.Router();
+const SECRET = "your_jwt_secret";
 
-// 🔐 회원가입
+// 회원가입
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
-
-  // 중복 검사
   db.get(
     "SELECT * FROM users WHERE username = ?",
     [username],
     async (err, user) => {
       if (user) return res.status(409).send("Username already exists");
-
-      // 암호화 후 저장
       const hashed = await bcrypt.hash(password, 10);
       db.run(
         "INSERT INTO users (username, password) VALUES (?, ?)",
@@ -30,25 +27,24 @@ router.post("/register", async (req, res) => {
   );
 });
 
-// 🔓 로그인
-router.post("/login", passport.authenticate("local"), (req, res) => {
-  res.send("Logged in successfully");
-});
+// 로그인 (JWT 발급)
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  db.get(
+    "SELECT * FROM users WHERE username = ?",
+    [username],
+    async (err, user) => {
+      if (err) return res.status(500).send("DB error");
+      if (!user) return res.status(401).send("No user");
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) return res.status(401).send("Wrong password");
 
-// 🚪 로그아웃
-router.get("/logout", (req, res) => {
-  req.logout(() => {
-    res.send("Logged out");
-  });
-});
-
-// 🧠 로그인 상태 확인용 (선택)
-router.get("/me", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ user: req.user });
-  } else {
-    res.status(401).send("Not authenticated");
-  }
+      const token = jwt.sign({ id: user.id, username: user.username }, SECRET, {
+        expiresIn: "2h",
+      });
+      res.json({ token });
+    }
+  );
 });
 
 module.exports = router;
