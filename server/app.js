@@ -9,7 +9,7 @@ const app = express();
 // ✅ CORS: 프론트가 HTML 파일(localhost:5500)에서 실행될 경우
 app.use(
   cors({
-    origin: "http://localhost:8080", // HTML 테스트 파일 실행 도메인
+    origin: "http://localhost:3000", // HTML 테스트 파일 실행 도메인
     credentials: true, // 인증정보 허용
   })
 );

@@ -10,9 +10,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-router.post("/chat", authenticateToken, async (req, res) => {
+router.post("/chat", async (req, res) => {
   const { message } = req.body;
-  const userId = req.user.id;
+  const userId = 1;
 
   try {
     // 1. 과거 대화 불러오기

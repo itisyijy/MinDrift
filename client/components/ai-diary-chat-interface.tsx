@@ -25,19 +25,67 @@ export default function AIDiaryChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [entries])
 
-  const handleSubmit = () => {
-    if (!currentText.trim()) return
+  const sendMessage = async (message: string) => {
+    const token = "your-dev-jwt-token";
+  
+    const res = await fetch("http://localhost:8080/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message }),
+    });
+  
+    const data = await res.json();
+    return data.reply;
+  };
+  
+  
+  const fetchMessages = async () => {
+    const token = localStorage.getItem("jwt");
+  
+    const res = await fetch("http://localhost:8080/api/messages", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  
+    if (!res.ok) throw new Error("Failed to fetch messages");
+  
+    const data = await res.json();
+    return data;
+  };
 
+  
+  const handleSubmit = async () => {
+    if (!currentText.trim()) return;
+  
     const newEntry: JournalEntry = {
       id: Date.now().toString(),
       text: currentText,
       timestamp: new Date(),
       mode: isEmotionalMode ? "emotional" : "record",
-    }
-
-    setEntries((prev) => [...prev, newEntry])
-    setCurrentText("")
-  }
+    };
+  
+    setEntries((prev) => [...prev, newEntry]);
+  
+    // GPT 응답 받기
+    const reply = await sendMessage(currentText);
+  
+    const replyEntry: JournalEntry = {
+      id: (Date.now() + 1).toString(),
+      text: reply,
+      timestamp: new Date(),
+      mode: "record",
+    };
+  
+    setEntries((prev) => [...prev, replyEntry]);
+    setCurrentText("");
+  };
+  
+  
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
