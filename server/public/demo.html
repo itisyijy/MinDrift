@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Diary Test</title>
+  </head>
+  <body>
+    <!-- ✅ 회원가입 섹션 -->
+    <h2>Register</h2>
+    <input id="reg_user_id" placeholder="User ID" />
+    <input id="reg_username" placeholder="Name (username)" />
+    <input id="reg_password" type="password" placeholder="Password" />
+    <input id="reg_confirm" type="password" placeholder="Confirm Password" />
+    <button id="registerBtn">Register</button>
+    <div id="registerResult"></div>
+    <hr />
+
+    <!-- ✅ 로그인/로그아웃 섹션 -->
+    <h2>Login</h2>
+    <input id="user_id" placeholder="User ID" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <button id="logoutBtn">Logout</button>
+
+    <hr />
+    <h3 id="welcome"></h3>
+    <!-- 로그인한 사용자 이름 표시 -->
+
+    <!-- ✅ 일기 자동 생성 -->
+    <h2>✍️ Write Diary</h2>
+    <button id="generateFromHistory">📝 대화 기록 기반 자동 일기</button>
+    <div id="diarySummary"></div>
+    <!-- GPT 생성 일기 요약 표시 -->
+
+    <hr />
+
+    <!-- ✅ 일기 아카이브 조회 -->
+    <h2>📂 Diary Archive</h2>
+    <button id="loadArchiveDates">📅 Load Diary Dates</button>
+    <ul id="diaryDateList"></ul>
+    <!-- 버튼 목록으로 일기 날짜 표시 -->
+
+    <input type="date" id="archiveDate" />
+    <button id="fetchArchiveBtn">🔍 Fetch by Date</button>
+
+    <pre id="archiveResult"></pre>
+    <!-- 선택한 날짜의 일기 결과 표시 -->
+
+    <hr />
+
+    <!-- ✅ 채팅 기능 -->
+    <h2>🧠 Chat</h2>
+    <input type="text" id="message" placeholder="Type a message" />
+    <button id="sendMessageBtn">Send</button>
+
+    <pre id="chat"></pre>
+    <!-- 채팅 기록 표시 -->
+
+    <button id="fetchMessagesBtn">Get Messages</button>
+    <pre id="output"></pre>
+    <!-- 전체 메시지 JSON 표시 -->
+
+    <!-- ✅ 프론트엔드 기능 JS 파일 연결 -->
+    <script src="test-auth.js"></script>
+  </body>
+</html>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Diary Test</title>
+  </head>
+  <body>
+    <!-- ✅ 회원가입 섹션 -->
+    <h2>Register</h2>
+    <input id="reg_user_id" placeholder="User ID" />
+    <input id="reg_username" placeholder="Name (username)" />
+    <input id="reg_password" type="password" placeholder="Password" />
+    <input id="reg_confirm" type="password" placeholder="Confirm Password" />
+    <button id="registerBtn">Register</button>
+    <div id="registerResult"></div>
+    <hr />
+
+    <!-- ✅ 로그인/로그아웃 섹션 -->
+    <h2>Login</h2>
+    <input id="user_id" placeholder="User ID" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <button id="logoutBtn">Logout</button>
+
+    <hr />
+    <h3 id="welcome"></h3>
+    <!-- 로그인한 사용자 이름 표시 -->
+
+    <!-- ✅ 일기 자동 생성 -->
+    <h2>✍️ Write Diary</h2>
+    <button id="generateFromHistory">📝 대화 기록 기반 자동 일기</button>
+    <div id="diarySummary"></div>
+    <!-- GPT 생성 일기 요약 표시 -->
+
+    <hr />
+
+    <!-- ✅ 일기 아카이브 조회 -->
+    <h2>📂 Diary Archive</h2>
+    <button id="loadArchiveDates">📅 Load Diary Dates</button>
+    <ul id="diaryDateList"></ul>
+    <!-- 버튼 목록으로 일기 날짜 표시 -->
+
+    <input type="date" id="archiveDate" />
+    <button id="fetchArchiveBtn">🔍 Fetch by Date</button>
+
+    <pre id="archiveResult"></pre>
+    <!-- 선택한 날짜의 일기 결과 표시 -->
+
+    <hr />
+
+    <!-- ✅ 채팅 기능 -->
+    <h2>🧠 Chat</h2>
+    <input type="text" id="message" placeholder="Type a message" />
+    <button id="sendMessageBtn">Send</button>
+
+    <pre id="chat"></pre>
+    <!-- 채팅 기록 표시 -->
+
+    <button id="fetchMessagesBtn">Get Messages</button>
+    <pre id="output"></pre>
+    <!-- 전체 메시지 JSON 표시 -->
+
+    <!-- ✅ 프론트엔드 기능 JS 파일 연결 -->
+    <script src="test-auth.js"></script>
+  </body>
+</html>

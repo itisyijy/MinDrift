@@ -1,7 +1,7 @@
 let token = "";
 const PORT = 8080;
 
-// 로그인
+// ✅ 로그인 요청: JWT 토큰 발급 후 저장 및 사용자 정보 로드
 async function login() {
   const res = await fetch(`http://localhost:${PORT}/auth/login`, {
     method: "POST",
@@ -15,21 +15,20 @@ async function login() {
   const data = await res.json();
   token = data.token;
   localStorage.setItem("jwt", token);
-
   document.getElementById("output").innerText =
     "✅ Login Success\n\n" + JSON.stringify(data, null, 2);
 
   await fetchUserInfo();
 }
 
-// 로그아웃
+// ✅ 로그아웃 처리: 토큰 제거
 function logout() {
   localStorage.removeItem("jwt");
   token = "";
   alert("Logged out!");
 }
 
-// 메시지 목록 가져오기
+// ✅ 전체 메시지 목록 불러오기
 async function fetchMessages() {
   const savedToken = token || localStorage.getItem("jwt");
   const res = await fetch(`http://localhost:${PORT}/api/messages`, {
@@ -51,7 +50,7 @@ async function fetchMessages() {
     "🧠 Messages:\n\n" + JSON.stringify(data, null, 2);
 }
 
-// 메시지 전송
+// ✅ 채팅 메시지 전송 → GPT 응답 표시
 async function sendMessage() {
   const token = localStorage.getItem("jwt");
   const message = document.getElementById("message").value;
@@ -71,26 +70,26 @@ async function sendMessage() {
   ).innerText += `You: ${message}\nGPT: ${data.reply}\n`;
 }
 
-// 사용자 정보 조회
+// ✅ 사용자 정보 조회 (로그인 후 사용자 이름 출력)
 async function fetchUserInfo() {
   const savedToken = localStorage.getItem("jwt");
   const res = await fetch(`http://localhost:${PORT}/auth/me`, {
     method: "GET",
     headers: {
-      Authorization: "Bearer " + savedToken,
+      Authorization: `Bearer ${savedToken}`,
     },
   });
 
+  const output = document.getElementById("welcome");
   if (res.ok) {
     const data = await res.json();
-    document.getElementById("welcome").innerText = `👋 Hello, ${data.username}`;
+    output.innerText = `👋 Hello, ${data.username}`;
   } else {
-    document.getElementById("welcome").innerText =
-      "❌ Failed to load user info";
+    output.innerText = "❌ Failed to load user info";
   }
 }
 
-// 회원가입
+// ✅ 회원가입 요청 처리
 async function register() {
   const user_id = document.getElementById("reg_user_id").value.trim();
   const username = document.getElementById("reg_username").value.trim();
@@ -133,7 +132,7 @@ async function register() {
   }
 }
 
-// DOM 로딩 후 버튼 이벤트 등록
+// ✅ 페이지 로드 후 버튼 이벤트 등록
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("registerBtn")?.addEventListener("click", register);
   document.getElementById("loginBtn")?.addEventListener("click", login);
@@ -145,6 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("fetchMessagesBtn")
     ?.addEventListener("click", fetchMessages);
 
+  // 자동 일기 생성 버튼
   document
     .getElementById("generateFromHistory")
     ?.addEventListener("click", async () => {
@@ -180,6 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+  // 일기 날짜 목록 불러오기
   document
     .getElementById("fetchArchiveBtn")
     ?.addEventListener("click", () => fetchDiaryArchive());
@@ -189,6 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", loadDiaryDates);
 });
 
+// ✅ 특정 날짜의 일기 기록 불러오기
 async function fetchDiaryArchive(dateParam = null) {
   const savedToken = localStorage.getItem("jwt");
   const date = dateParam || document.getElementById("archiveDate")?.value;
@@ -227,10 +229,11 @@ async function fetchDiaryArchive(dateParam = null) {
   }
 }
 
+// ✅ 작성된 일기 날짜 리스트 불러오기
 async function loadDiaryDates() {
   const savedToken = localStorage.getItem("jwt");
   const ul = document.getElementById("diaryDateList");
-  ul.innerHTML = ""; // 초기화
+  ul.innerHTML = "";
 
   try {
     const res = await fetch("/api/diary/dates", {
