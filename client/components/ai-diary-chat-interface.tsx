@@ -38,14 +38,14 @@ export default function AIDiaryChatInterface() {
   const handleSubmit = async () => {
     if (!currentText.trim()) return
 
-    const userMessage: JournalEntry = {
+    const newEntry: JournalEntry = {
       id: Date.now().toString(),
       text: currentText,
       timestamp: new Date(),
       mode: isEmotionalMode ? "emotional" : "record",
     }
 
-    setEntries((prev) => [...prev, userMessage])
+    setEntries((prev) => [...prev, newEntry])
     setPrompts((prev) => [...prev, currentText])
     setCurrentText("")
 
@@ -56,21 +56,21 @@ export default function AIDiaryChatInterface() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
-        body: JSON.stringify({ message: userMessage.text }),
+        body: JSON.stringify({ message: newEntry.text }),
       })
 
       const data = await res.json()
 
-      const botMessage: JournalEntry = {
+      const botReply: JournalEntry = {
         id: Date.now().toString() + "_bot",
         text: data.reply,
         timestamp: new Date(),
-        mode: userMessage.mode,
+        mode: newEntry.mode,
       }
 
-      setEntries((prev) => [...prev, botMessage])
+      setEntries((prev) => [...prev, botReply])
     } catch (err) {
-      console.error("Error getting AI reply:", err)
+      console.error("AI response error:", err)
     }
   }
 
@@ -111,52 +111,120 @@ export default function AIDiaryChatInterface() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-slate-200 transition-all duration-500">
-      {/* 사이드 메뉴 생략 (동일) */}
+      <div className="fixed top-4 left-4 z-50">
+        <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-full hover:bg-blue-800/50 text-slate-200">
+          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </Button>
+      </div>
+
+      <div className={`fixed top-0 left-0 h-full w-80 transform transition-transform duration-300 z-40 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"} bg-slate-900/95 backdrop-blur-md border-r border-blue-800/50`}>
+        <div className="p-6 pt-20">
+          <div className="mb-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-800/50">
+                <User className="h-6 w-6 text-blue-200" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-200">{username}</h3>
+                <p className="text-sm text-slate-400">Welcome back!</p>
+              </div>
+            </div>
+          </div>
+
+          <nav className="space-y-2">
+            <Button variant="ghost" className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200">
+              <FileText className="mr-3 h-4 w-4" />
+              Archive
+            </Button>
+            <Button variant="ghost" className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200" onClick={() => {
+              localStorage.removeItem("jwt")
+              localStorage.removeItem("username")
+              window.location.href = "/login"
+            }}>
+              <LogOut className="mr-3 h-4 w-4" />
+              Log out
+            </Button>
+          </nav>
+        </div>
+      </div>
+
+      {isMenuOpen && <div className="fixed inset-0 bg-black/20 z-30" onClick={() => setIsMenuOpen(false)} />}
 
       <div className="container mx-auto px-4 py-8 pt-20 h-screen flex flex-col">
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto flex-1 min-h-0">
-          {/* 왼쪽: 대화형 프롬프트 */}
           <div className="flex flex-col h-full">
             <Card className="bg-slate-800/60 backdrop-blur-sm border-blue-700/50 shadow-lg flex-1 flex flex-col min-h-0">
-              <CardHeader><CardTitle className="text-xl">🌙 Midnight Journal</CardTitle></CardHeader>
+              <CardHeader className="flex-shrink-0">
+                <CardTitle className="text-xl font-semibold text-slate-200">🌙 Midnight Journal</CardTitle>
+              </CardHeader>
               <CardContent className="flex-1 flex flex-col min-h-0 space-y-4">
-                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-                  {entries.map((entry) => (
-                    <div key={entry.id} className={`flex ${entry.id.includes("bot") ? "justify-start" : "justify-end"}`}>
-                      <div className="max-w-[80%]">
-                        <div className={`rounded-2xl px-4 py-3 shadow-sm ${entry.id.includes("bot") ? "bg-purple-700 text-white" : "bg-blue-600 text-white"}`}>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{entry.text}</p>
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1 text-right">{formatTime(entry.timestamp)}</div>
-                      </div>
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                  {entries.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400">
+                      <p className="text-lg mb-2">Start your journal entry...</p>
+                      <p className="text-sm">Share your thoughts, feelings, or record your day</p>
                     </div>
-                  ))}
+                  ) : (
+                    entries.map((entry) => (
+                      <div key={entry.id} className={`flex ${entry.id.includes("bot") ? "justify-start" : "justify-end"}`}>
+                        <div className="max-w-[80%]">
+                          <div className={`rounded-2xl px-4 py-3 shadow-sm ${entry.id.includes("bot") ? "bg-purple-700 text-white" : "bg-blue-600 text-white"}`}>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{entry.text}</p>
+                          </div>
+                          <div className="flex items-center justify-end mt-1 space-x-2">
+                            <span className={`text-xs px-2 py-1 rounded-full ${entry.mode === "emotional" ? "bg-purple-900/50 text-purple-300" : "bg-blue-900/50 text-blue-300"}`}>
+                              {entry.mode === "emotional" ? "💭 Emotional" : "📝 Record"}
+                            </span>
+                            <span className="text-xs text-slate-400">{formatTime(entry.timestamp)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="pt-4 border-t border-blue-700/30 space-y-3">
-                  <div className="flex justify-center space-x-3">
-                    <Label htmlFor="mode-toggle" className="text-sm">📝 Record</Label>
-                    <Switch id="mode-toggle" checked={isEmotionalMode} onCheckedChange={setIsEmotionalMode} className="data-[state=checked]:bg-blue-600" />
-                    <Label htmlFor="mode-toggle" className="text-sm">💭 Emotional</Label>
+                <div className="flex-shrink-0 space-y-3 pt-4 border-t border-blue-700/30">
+                  <div className="flex items-center justify-center space-x-3">
+                    <Label htmlFor="mode-toggle" className="text-sm font-medium text-slate-300">
+                      📝 Record
+                    </Label>
+                    <Switch
+                      id="mode-toggle"
+                      checked={isEmotionalMode}
+                      onCheckedChange={setIsEmotionalMode}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                    <Label htmlFor="mode-toggle" className="text-sm font-medium text-slate-300">
+                      💭 Emotional
+                    </Label>
                   </div>
 
                   <div className="flex space-x-2">
                     <Textarea
-                      placeholder={isEmotionalMode ? "How are you feeling?" : "What happened today?"}
+                      placeholder={isEmotionalMode ? "How are you feeling right now..." : "What happened today..."}
                       value={currentText}
                       onChange={(e) => setCurrentText(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      className="flex-1 min-h-[60px] max-h-[120px] resize-none bg-slate-700/60 border-blue-600/50 text-slate-200"
+                      className="flex-1 min-h-[60px] max-h-[120px] resize-none rounded-xl bg-slate-700/60 border-blue-600/50 focus:border-blue-500 text-slate-200 placeholder:text-slate-400"
                     />
-                    <Button onClick={handleSubmit} disabled={!currentText.trim()} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={!currentText.trim()}
+                      className="self-end rounded-xl bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all duration-200"
+                    >
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
 
                   <div className="text-center pt-2">
-                    <Button onClick={handleGenerateDiary} disabled={prompts.length === 0} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl">
-                      <Sparkles className="h-4 w-4" /> Generate Diary
+                    <Button
+                      onClick={handleGenerateDiary}
+                      disabled={prompts.length === 0}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span>Generate Diary</span>
                     </Button>
                   </div>
                 </div>
@@ -164,10 +232,11 @@ export default function AIDiaryChatInterface() {
             </Card>
           </div>
 
-          {/* 오른쪽: 요약 다이어리 */}
           <div className="flex flex-col h-full">
             <Card className="bg-slate-800/60 backdrop-blur-sm border-blue-700/50 shadow-lg flex-1">
-              <CardHeader><CardTitle className="text-xl">📔 AI Insights</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-slate-200">🤖 AI Insights</CardTitle>
+              </CardHeader>
               <CardContent className="flex-1 overflow-y-auto">
                 {summary ? (
                   <div className="text-slate-300 whitespace-pre-wrap">{summary}</div>
