@@ -19,24 +19,28 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
+  
     if (password !== confirmPassword) {
       setError("Passwords do not match")
       return
     }
-
+  
     setError("")
-
-    const response = await fetch("http://localhost:4000/auth/signup", {
+  
+    const response = await fetch("http://localhost:8080/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, userid, password }),
+      body: JSON.stringify({
+        username,
+        user_id: userid,
+        password,
+      }),
     })
-
+  
     const data = await response.json()
-
+  
     if (response.ok) {
       router.push("/login")
     } else {
