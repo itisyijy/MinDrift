@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Diary Test</title>
+    <script src="test-auth.js"></script>
+  </head>
+  <body>
+    <h2>Register</h2>
+    <input id="reg_user_id" placeholder="User ID" />
+    <input id="reg_username" placeholder="Name (username)" />
+    <input id="reg_password" type="password" placeholder="Password" />
+    <input id="reg_confirm" type="password" placeholder="Confirm Password" />
+    <button onclick="register()">Register</button>
+    <div id="registerResult"></div>
+    <hr />
+
+    <h2>Login</h2>
+    <input id="user_id" placeholder="User ID" />
+    <input id="password" type="password" placeholder="Password" />
+
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
+
+    <hr />
+    <h3 id="welcome"></h3>
+
+    <h2>✍️ Write Diary</h2>
+    <button id="generateFromHistory">📝 대화 기록 기반 자동 일기</button>
+    <div id="diarySummary"></div>
+
+    <h3>📄 AI Generated Diary Summary</h3>
+    <div id="diaryResult"></div>
+
+    <hr />
+
+    <h2>🧠 Chat</h2>
+    <input type="text" id="message" placeholder="Type a message" />
+    <button onclick="sendMessage()">Send</button>
+
+    <pre id="chat"></pre>
+
+    <button onclick="fetchMessages()">Get Messages</button>
+    <pre id="output"></pre>
+  </body>
+</html>
