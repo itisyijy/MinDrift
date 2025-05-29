@@ -38,6 +38,7 @@ export default function SignUpPage() {
         password,
       }),
     })
+    
   
     const data = await response.json()
   
