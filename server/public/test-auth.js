@@ -6,7 +6,7 @@ async function login() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      username: document.getElementById("username").value,
+      user_id: document.getElementById("user_id").value,
       password: document.getElementById("password").value,
     }),
   });
@@ -16,6 +16,8 @@ async function login() {
   localStorage.setItem("jwt", token); // 저장
   document.getElementById("output").innerText =
     "✅ Login Success\n\n" + JSON.stringify(data, null, 2);
+  // login() 함수 안에서 로그인 성공 후
+  await fetchUserInfo();
 }
 
 function logout() {
@@ -100,3 +102,64 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 });
+
+async function fetchUserInfo() {
+  const savedToken = localStorage.getItem("jwt");
+  const res = await fetch(`http://localhost:${PORT}/auth/me`, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + savedToken,
+    },
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    document.getElementById("welcome").innerText = `👋 Hello, ${data.username}`;
+  } else {
+    document.getElementById("welcome").innerText =
+      "❌ Failed to load user info";
+  }
+}
+
+async function register() {
+  const user_id = document.getElementById("reg_user_id").value.trim();
+  const username = document.getElementById("reg_username").value.trim();
+  const password = document.getElementById("reg_password").value;
+  const confirm = document.getElementById("reg_confirm").value;
+  const output = document.getElementById("registerResult");
+
+  // 클라이언트 유효성 검사
+  if (!user_id || !username || !password || !confirm) {
+    output.innerText = "❗ 모든 필드를 입력해주세요.";
+    return;
+  }
+
+  if (password !== confirm) {
+    output.innerText = "❗ 비밀번호가 일치하지 않습니다.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`http://localhost:${PORT}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, username, password }),
+    });
+
+    if (res.status === 409) {
+      output.innerText = "❌ 이미 존재하는 ID입니다.";
+      return;
+    }
+
+    if (!res.ok) {
+      const msg = await res.text();
+      output.innerText = "❌ 회원가입 실패: " + msg;
+      return;
+    }
+
+    output.innerText = "✅ 회원가입 성공! 이제 로그인하세요.";
+  } catch (err) {
+    console.error("Register error:", err);
+    output.innerText = "❌ 네트워크 오류 또는 서버 오류";
+  }
+}
