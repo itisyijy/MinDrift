@@ -10,31 +10,37 @@ import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-  
-    const response = await fetch("http://localhost:4000/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    })
-  
-    const data = await response.json()
-  
-    if (response.ok) {
-      // 1. Save token & user to localStorage
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
-  
-      // 2. Redirect to chat page
+    e.preventDefault();
+
+    try {
+      const response = await fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      })
+
+      if (!response.ok) {
+        const errText = await response.text()
+        alert("❌ Login Failed: " + errText)
+        return
+      }
+
+      const data = await response.json()
+      console.log("✅ Login Success:", data)
+
+      localStorage.setItem("jwt", data.token)
+
       router.push("/chat")
-    } else {
-      alert(data.message || "Login failed")
+    } catch (error) {
+      console.error("❌ Fail Login Request:", error)
+      alert("Cannot access to the server")
     }
   }
 
@@ -44,7 +50,7 @@ export default function LoginPage() {
       <div className="text-center mb-10">
         <div className="flex justify-center mb-4">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <img src="/images/logo.png" alt="Mindrift Logo" className="w-28 h-auto" /> {/*logo image inserting */}
+            <img src="/images/logo.png" alt="Mindrift Logo" className="w-28 h-auto" />
           </div>
         </div>
         <p className="text-blue-100 text-2xl font-extrabold tracking-wide">Reflect your mind daily</p>
@@ -59,15 +65,15 @@ export default function LoginPage() {
         <CardContent>
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <Label htmlFor="email" className="block text-sm text-slate-200 mb-2">
-                Email
+              <Label htmlFor="username" className="block text-sm text-slate-200 mb-2">
+                ID
               </Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                id="username"
+                type="text" // ✅ email 타입에서 일반 text로 변경
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your ID"
                 className="bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 focus:ring-blue-500"
               />
             </div>
@@ -89,20 +95,6 @@ export default function LoginPage() {
             <div className="space-y-3 pt-2">
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                 Log in
-              </Button>
-
-              <Button
-                type="button"
-                className="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
-              >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78...z" />
-                  <path fill="#34A853" d="M12 23c2.97...z" />
-                  <path fill="#FBBC05" d="M5.84 14.09...z" />
-                  <path fill="#EA4335" d="M12 5.38...z" />
-                </svg>
-                <img src="/images/google_logo.png" alt="Google Logo" className="w-5 h-5" />
-                Continue with Google
               </Button>
             </div>
           </form>
