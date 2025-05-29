@@ -3,7 +3,7 @@ const authenticateToken = require("../auth/middleware");
 const OpenAI = require("openai");
 const sanitizeHtml = require("sanitize-html"); // ✅ 추가
 const router = express.Router();
-const db = require("../db/db");
+const db = require("../db");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

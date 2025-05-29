@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const db = require("../db/db");
+const db = require("../db");
 const authenticateToken = require("../auth/middleware"); // 또는 "../auth/middleware" 경로에 맞게 조정
 
 const router = express.Router();
