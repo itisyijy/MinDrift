@@ -16,7 +16,7 @@ app.use(helmet());
 // CORS 설정: HTML이 file:// 또는 localhost:5500에서 실행된다면 허용
 app.use(
   cors({
-    origin: "http://localhost:8080", // 또는 ["http://localhost:5500"]
+    origin: "http://localhost:3000", // 또는 ["http://localhost:5500"]
     credentials: false,
   })
 );
