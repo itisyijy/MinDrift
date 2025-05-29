@@ -16,6 +16,7 @@ interface JournalEntry {
   reply?: string
 }
 
+
 export default function AIDiaryChatInterface() {
   const [username, setUsername] = useState("Alex")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -25,6 +26,7 @@ export default function AIDiaryChatInterface() {
   const [prompts, setPrompts] = useState<string[]>([])
   const [summary, setSummary] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const router = useRouter() // useRouter 선언
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username")
@@ -132,9 +134,11 @@ export default function AIDiaryChatInterface() {
           </div>
 
           <nav className="space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200">
-              <FileText className="mr-3 h-4 w-4" />
+            <Button variant="ghost" className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200"
+              onClick={() => router.push("/archive")} // ✅ 아카이브 페이지로 이동
+            > <FileText className="mr-3 h-4 w-4" />
               Archive
+
             </Button>
             <Button variant="ghost" className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200" onClick={() => {
               localStorage.removeItem("jwt")

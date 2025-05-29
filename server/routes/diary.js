@@ -1,6 +1,7 @@
 const express = require("express");
 const authenticateToken = require("../auth/middleware");
 const OpenAI = require("openai");
+const sanitizeHtml = require("sanitize-html"); // ✅ 추가
 const router = express.Router();
 const db = require("../db/db");
 
@@ -8,10 +9,30 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const today = new Date().toISOString().split("T")[0];
-
 function stripCodeBlock(response) {
   return response.replace(/^```html\s*|\s*```$/g, "").trim();
+}
+
+// ✅ sanitize 설정
+function sanitizeDiaryHtml(html) {
+  return sanitizeHtml(html, {
+    allowedTags: [
+      "div",
+      "h2",
+      "h3",
+      "p",
+      "strong",
+      "ul",
+      "li",
+      "span",
+      "blockquote",
+    ],
+    allowedAttributes: {
+      "*": ["class"],
+      span: ["class"],
+    },
+    disallowedTagsMode: "discard",
+  });
 }
 
 async function generateDiarySummary(diaryText, username) {
@@ -34,7 +55,8 @@ async function generateDiarySummary(diaryText, username) {
   });
 
   const rawReply = completion.choices[0].message.content;
-  return stripCodeBlock(rawReply);
+  const htmlStripped = stripCodeBlock(rawReply);
+  return sanitizeDiaryHtml(htmlStripped); // ✅ 필터링 후 반환
 }
 
 // 📥 POST /api/diary
@@ -97,6 +119,68 @@ router.post("/diary/from-history", authenticateToken, async (req, res) => {
     console.error("❌ from-history error:", err.message);
     res.status(500).json({ error: "일기 생성 실패" });
   }
+});
+
+// 📅 특정 날짜 아카이브 조회
+router.get("/diary/archive", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const date = req.query.date; // YYYY-MM-DD
+
+  if (!date) {
+    return res.status(400).json({ error: "날짜를 입력해주세요 (YYYY-MM-DD)." });
+  }
+
+  // 1. 메시지 조회
+  db.all(
+    `SELECT role, content, created_at FROM messages
+     WHERE user_id = ? AND date(created_at) = ?
+     ORDER BY created_at ASC`,
+    [userId, date],
+    (err, messages) => {
+      if (err) {
+        console.error("❌ messages DB error:", err.message);
+        return res.status(500).json({ error: "메시지 조회 실패" });
+      }
+
+      // 2. 일기 요약 조회
+      db.get(
+        `SELECT content, summary, created_at FROM diaries
+         WHERE user_id = ? AND date(created_at) = ?`,
+        [userId, date],
+        (err, diary) => {
+          if (err) {
+            console.error("❌ diaries DB error:", err.message);
+            return res.status(500).json({ error: "일기 조회 실패" });
+          }
+
+          res.json({
+            date,
+            messages,
+            diary: diary || null, // 없을 경우 null 반환
+          });
+        }
+      );
+    }
+  );
+});
+
+// 📆 사용자가 작성한 일기 날짜 목록 반환
+router.get("/diary/dates", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+
+  db.all(
+    `SELECT DISTINCT date(created_at) as date FROM diaries
+     WHERE user_id = ? ORDER BY date DESC`,
+    [userId],
+    (err, rows) => {
+      if (err) {
+        console.error("❌ diary date list error:", err.message);
+        return res.status(500).json({ error: "일기 날짜 조회 실패" });
+      }
+      const dates = rows.map((row) => row.date);
+      res.json({ dates });
+    }
+  );
 });
 
 module.exports = router;

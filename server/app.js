@@ -7,14 +7,18 @@ const chatRoutes = require("./routes/chat");
 const diaryRouter = require("./routes/diary");
 const db = require("./db/db");
 const { deleteMessages } = require("./cron");
+const helmet = require("helmet");
 
 const app = express();
+
+app.use(helmet());
 
 // CORS 설정: HTML이 file:// 또는 localhost:5500에서 실행된다면 허용
 app.use(
   cors({
     origin: "http://localhost:3000", // 또는 ["http://localhost:5500"]
     credentials: true,
+
   })
 );
 
