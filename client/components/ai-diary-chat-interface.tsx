@@ -235,11 +235,14 @@ export default function AIDiaryChatInterface() {
           <div className="flex flex-col h-full">
             <Card className="bg-slate-800/60 backdrop-blur-sm border-blue-700/50 shadow-lg flex-1">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold text-slate-200">🤖 AI Insights</CardTitle>
+                <CardTitle className="text-xl font-semibold text-slate-200">📕Diary</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto">
                 {summary ? (
-                  <div className="text-slate-300 whitespace-pre-wrap">{summary}</div>
+                  <div
+                    className="text-slate-300"
+                    dangerouslySetInnerHTML={{ __html: summary }}
+                  />
                 ) : (
                   <div className="text-center py-8 text-slate-400">
                     <p className="text-sm">AI insights will appear here after you generate your diary</p>
