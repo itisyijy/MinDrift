@@ -135,18 +135,19 @@ async function register() {
 
 // DOM 로딩 후 버튼 이벤트 등록
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("registerBtn").addEventListener("click", register);
-  document.getElementById("loginBtn").addEventListener("click", login);
-  document.getElementById("logoutBtn").addEventListener("click", logout);
+  document.getElementById("registerBtn")?.addEventListener("click", register);
+  document.getElementById("loginBtn")?.addEventListener("click", login);
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document
     .getElementById("sendMessageBtn")
-    .addEventListener("click", sendMessage);
+    ?.addEventListener("click", sendMessage);
   document
     .getElementById("fetchMessagesBtn")
-    .addEventListener("click", fetchMessages);
+    ?.addEventListener("click", fetchMessages);
+
   document
     .getElementById("generateFromHistory")
-    .addEventListener("click", async () => {
+    ?.addEventListener("click", async () => {
       try {
         const savedToken = localStorage.getItem("jwt");
 
@@ -172,11 +173,96 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const data = await res.json();
-        console.log(data);
         document.getElementById("diarySummary").innerHTML = data.reply;
       } catch (err) {
         console.error("Fetch error:", err);
         alert("네트워크 오류 또는 서버 응답 실패");
       }
     });
+
+  document
+    .getElementById("fetchArchiveBtn")
+    ?.addEventListener("click", () => fetchDiaryArchive());
+
+  document
+    .getElementById("loadArchiveDates")
+    ?.addEventListener("click", loadDiaryDates);
 });
+
+async function fetchDiaryArchive(dateParam = null) {
+  const savedToken = localStorage.getItem("jwt");
+  const date = dateParam || document.getElementById("archiveDate")?.value;
+  const output = document.getElementById("archiveResult");
+
+  if (!date) {
+    alert("날짜를 선택해주세요.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/diary/archive?date=${date}`, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + savedToken,
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      output.innerText = `❌ 오류: ${text}`;
+      return;
+    }
+
+    const data = await res.json();
+
+    output.innerText =
+      `📅 Date: ${data.date}\n\n` +
+      `💬 Messages:\n${data.messages
+        .map((m) => `[${m.role}] ${m.content} (${m.created_at})`)
+        .join("\n")}\n\n` +
+      `📄 Diary:\n${data.diary?.summary || "No diary summary."}`;
+  } catch (err) {
+    console.error("Fetch error:", err);
+    output.innerText = "❌ 네트워크 오류 또는 서버 응답 실패";
+  }
+}
+
+async function loadDiaryDates() {
+  const savedToken = localStorage.getItem("jwt");
+  const ul = document.getElementById("diaryDateList");
+  ul.innerHTML = ""; // 초기화
+
+  try {
+    const res = await fetch("/api/diary/dates", {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + savedToken,
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      alert("날짜 로드 실패: " + text);
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.dates.length === 0) {
+      ul.innerHTML = "<li>작성된 일기가 없습니다.</li>";
+      return;
+    }
+
+    data.dates.forEach((date) => {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.textContent = date;
+      btn.onclick = () => fetchDiaryArchive(date);
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Diary date load error:", err);
+    alert("네트워크 오류 또는 서버 오류");
+  }
+}
