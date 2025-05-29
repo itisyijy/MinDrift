@@ -25,6 +25,7 @@ export default function LoginPage() {
           password,
         }),
       })
+      
 
       if (!response.ok) {
         const errText = await response.text()
@@ -36,6 +37,8 @@ export default function LoginPage() {
       console.log("✅ Login Success:", data)
 
       localStorage.setItem("jwt", data.token)
+      localStorage.setItem("username", data.username)
+      console.log("username from login:", data.username)
 
       router.push("/chat")
     } catch (error) {

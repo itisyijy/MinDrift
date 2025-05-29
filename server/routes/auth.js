@@ -10,23 +10,21 @@ const SECRET = process.env.JWT_SECRET;
 // 회원가입
 router.post("/register", async (req, res) => {
   const { user_id, username, password } = req.body;
-  db.get(
-    "SELECT * FROM users WHERE user_id = ?",
-    [user_id],
-    async (err, user) => {
-      if (user) return res.status(409).send("Username already exists");
-      const hashed = await bcrypt.hash(password, 10);
-      db.run(
-        "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
-        [user_id, username, hashed],
-        (err) => {
-          if (err) return res.status(500).send("DB error");
-          res.send("Registered successfully");
-        }
-      );
-    }
-  );
+  db.get("SELECT * FROM users WHERE user_id = ?", [user_id], async (err, user) => {
+    if (user) return res.status(409).json({ message: "Username already exists" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    db.run(
+      "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
+      [user_id, username, hashed],
+      (err) => {
+        if (err) return res.status(500).json({ message: "DB error" });
+        res.status(201).json({ message: "Registered successfully" });
+      }
+    );
+  });
 });
+
 
 // 로그인 (JWT 발급)
 router.post("/login", async (req, res) => {
@@ -47,7 +45,10 @@ router.post("/login", async (req, res) => {
           expiresIn: "2h",
         }
       );
-      res.json({ token });
+      res.json({ 
+        token,
+        username: user.username,
+       });
     }
   );
 });

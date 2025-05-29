@@ -17,7 +17,8 @@ app.use(helmet());
 app.use(
   cors({
     origin: "http://localhost:3000", // 또는 ["http://localhost:5500"]
-    credentials: false,
+    credentials: true,
+
   })
 );
 
