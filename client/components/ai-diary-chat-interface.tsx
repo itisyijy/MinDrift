@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Menu, X, User, FileText, LogOut, Send } from "lucide-react"
+import { useRouter } from "next/navigation" // ✅ 라우터 훅 추가
 
 export default function AIDiaryChatInterface() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -19,6 +20,7 @@ export default function AIDiaryChatInterface() {
   const [currentText, setCurrentText] = useState("")
   const [entries, setEntries] = useState<JournalEntry[]>([])
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const router = useRouter() // useRouter 선언
 
   // Scroll to bottom when new entries are added
   useEffect(() => {
@@ -90,9 +92,10 @@ export default function AIDiaryChatInterface() {
               <User className="mr-3 h-4 w-4" />
               My Page
             </Button>
-            <Button variant="ghost" className="w-full justify-start hover:bg-blue-800/30 text-slate-200">
-              <FileText className="mr-3 h-4 w-4" />
-              Recent Logs
+            <Button variant="ghost" className="w-full justify-start hover:bg-blue-800/30 text-slate-200"
+            onClick={() => router.push("/archive")} // ✅ 아카이브 페이지로 이동
+            > <FileText className="mr-3 h-4 w-4" />
+            Recent Logs
             </Button>
             <Button variant="ghost" className="w-full justify-start hover:bg-blue-800/30 text-slate-200">
               <LogOut className="mr-3 h-4 w-4" />

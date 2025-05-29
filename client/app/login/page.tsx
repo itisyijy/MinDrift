@@ -10,7 +10,7 @@ import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [username, setUsername] = useState('')
+  const [user_id, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,7 +21,7 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
+          user_id,
           password,
         }),
       })
@@ -71,7 +71,7 @@ export default function LoginPage() {
               <Input
                 id="username"
                 type="text" // ✅ email 타입에서 일반 text로 변경
-                value={username}
+                value={user_id}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your ID"
                 className="bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 focus:ring-blue-500"
