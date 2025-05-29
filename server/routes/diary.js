@@ -1,6 +1,7 @@
 const express = require("express");
 const authenticateToken = require("../auth/middleware");
 const OpenAI = require("openai");
+const sanitizeHtml = require("sanitize-html"); // ✅ 추가
 const router = express.Router();
 const db = require("../db/db");
 
@@ -8,10 +9,30 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const today = new Date().toISOString().split("T")[0];
-
 function stripCodeBlock(response) {
   return response.replace(/^```html\s*|\s*```$/g, "").trim();
+}
+
+// ✅ sanitize 설정
+function sanitizeDiaryHtml(html) {
+  return sanitizeHtml(html, {
+    allowedTags: [
+      "div",
+      "h2",
+      "h3",
+      "p",
+      "strong",
+      "ul",
+      "li",
+      "span",
+      "blockquote",
+    ],
+    allowedAttributes: {
+      "*": ["class"],
+      span: ["class"],
+    },
+    disallowedTagsMode: "discard",
+  });
 }
 
 async function generateDiarySummary(diaryText, username) {
@@ -34,7 +55,8 @@ async function generateDiarySummary(diaryText, username) {
   });
 
   const rawReply = completion.choices[0].message.content;
-  return stripCodeBlock(rawReply);
+  const htmlStripped = stripCodeBlock(rawReply);
+  return sanitizeDiaryHtml(htmlStripped); // ✅ 필터링 후 반환
 }
 
 // 📥 POST /api/diary

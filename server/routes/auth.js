@@ -5,7 +5,7 @@ const db = require("../db/db");
 const authenticateToken = require("../auth/middleware"); // 또는 "../auth/middleware" 경로에 맞게 조정
 
 const router = express.Router();
-const SECRET = "your_jwt_secret";
+const SECRET = process.env.JWT_SECRET;
 
 // 회원가입
 router.post("/register", async (req, res) => {

@@ -1,6 +1,7 @@
 let token = "";
 const PORT = 8080;
 
+// 로그인
 async function login() {
   const res = await fetch(`http://localhost:${PORT}/auth/login`, {
     method: "POST",
@@ -13,19 +14,22 @@ async function login() {
 
   const data = await res.json();
   token = data.token;
-  localStorage.setItem("jwt", token); // 저장
+  localStorage.setItem("jwt", token);
+
   document.getElementById("output").innerText =
     "✅ Login Success\n\n" + JSON.stringify(data, null, 2);
-  // login() 함수 안에서 로그인 성공 후
+
   await fetchUserInfo();
 }
 
+// 로그아웃
 function logout() {
   localStorage.removeItem("jwt");
   token = "";
   alert("Logged out!");
 }
 
+// 메시지 목록 가져오기
 async function fetchMessages() {
   const savedToken = token || localStorage.getItem("jwt");
   const res = await fetch(`http://localhost:${PORT}/api/messages`, {
@@ -47,6 +51,7 @@ async function fetchMessages() {
     "🧠 Messages:\n\n" + JSON.stringify(data, null, 2);
 }
 
+// 메시지 전송
 async function sendMessage() {
   const token = localStorage.getItem("jwt");
   const message = document.getElementById("message").value;
@@ -66,43 +71,7 @@ async function sendMessage() {
   ).innerText += `You: ${message}\nGPT: ${data.reply}\n`;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("generateFromHistory").onclick = async function () {
-    try {
-      const savedToken = localStorage.getItem("jwt");
-
-      const res = await fetch("/api/diary/from-history", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + savedToken, // JWT 토큰 필요
-        },
-      });
-
-      const contentType = res.headers.get("content-type");
-
-      if (!res.ok) {
-        // JSON 에러 처리
-        if (contentType && contentType.includes("application/json")) {
-          const errorData = await res.json();
-          alert("에러: " + (errorData.error || "알 수 없는 오류"));
-        } else {
-          const text = await res.text();
-          alert("서버 오류: " + text);
-        }
-        return;
-      }
-
-      const data = await res.json();
-      console.log(data);
-      document.getElementById("diarySummary").innerHTML = data.reply;
-    } catch (err) {
-      console.error("Fetch error:", err);
-      alert("네트워크 오류 또는 서버 응답 실패");
-    }
-  };
-});
-
+// 사용자 정보 조회
 async function fetchUserInfo() {
   const savedToken = localStorage.getItem("jwt");
   const res = await fetch(`http://localhost:${PORT}/auth/me`, {
@@ -121,6 +90,7 @@ async function fetchUserInfo() {
   }
 }
 
+// 회원가입
 async function register() {
   const user_id = document.getElementById("reg_user_id").value.trim();
   const username = document.getElementById("reg_username").value.trim();
@@ -128,7 +98,6 @@ async function register() {
   const confirm = document.getElementById("reg_confirm").value;
   const output = document.getElementById("registerResult");
 
-  // 클라이언트 유효성 검사
   if (!user_id || !username || !password || !confirm) {
     output.innerText = "❗ 모든 필드를 입력해주세요.";
     return;
@@ -163,3 +132,51 @@ async function register() {
     output.innerText = "❌ 네트워크 오류 또는 서버 오류";
   }
 }
+
+// DOM 로딩 후 버튼 이벤트 등록
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("registerBtn").addEventListener("click", register);
+  document.getElementById("loginBtn").addEventListener("click", login);
+  document.getElementById("logoutBtn").addEventListener("click", logout);
+  document
+    .getElementById("sendMessageBtn")
+    .addEventListener("click", sendMessage);
+  document
+    .getElementById("fetchMessagesBtn")
+    .addEventListener("click", fetchMessages);
+  document
+    .getElementById("generateFromHistory")
+    .addEventListener("click", async () => {
+      try {
+        const savedToken = localStorage.getItem("jwt");
+
+        const res = await fetch("/api/diary/from-history", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + savedToken,
+          },
+        });
+
+        const contentType = res.headers.get("content-type");
+
+        if (!res.ok) {
+          if (contentType && contentType.includes("application/json")) {
+            const errorData = await res.json();
+            alert("에러: " + (errorData.error || "알 수 없는 오류"));
+          } else {
+            const text = await res.text();
+            alert("서버 오류: " + text);
+          }
+          return;
+        }
+
+        const data = await res.json();
+        console.log(data);
+        document.getElementById("diarySummary").innerHTML = data.reply;
+      } catch (err) {
+        console.error("Fetch error:", err);
+        alert("네트워크 오류 또는 서버 응답 실패");
+      }
+    });
+});
