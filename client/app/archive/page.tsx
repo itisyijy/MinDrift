@@ -44,20 +44,34 @@ export default function ArchivePage() {
     title: string
   } | null>(null)
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const token = localStorage.getItem("jwt")
-        if (token) {
-          const payload = JSON.parse(atob(token.split(".")[1]))
-          setUserInfo({ username: payload.username || payload.user_id || "User" })
-        }
-      } catch (err) {
-        console.error("Failed to decode token:", err)
+  const fetchUserInfo = async () => {
+    try {
+      const token = localStorage.getItem("jwt")
+      if (!token) {
+        setUserInfo({ username: "User" })
+        return
+      }
+  
+      const res = await fetch(`${BASE_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+  
+      if (res.ok) {
+        const data = await res.json()
+        setUserInfo({ username: data.username })
+      } else {
+        console.error("Failed to load user info from server")
         setUserInfo({ username: "User" })
       }
+    } catch (err) {
+      console.error("Error decoding user info:", err)
+      setUserInfo({ username: "User" })
     }
+  }
 
+  useEffect(() => {
     const fetchDates = async () => {
       try {
         const token = localStorage.getItem("jwt")
@@ -75,8 +89,12 @@ export default function ArchivePage() {
         if (data.dates.length > 0) {
           fetchArchive(data.dates[0])
         }
-      } catch (err: any) {
-        console.error(err)
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error("Failed to load diary dates:", err.message)
+        } else {
+          console.error("Failed to load diary dates:", err)
+        }
         setError("Failed to load diary dates")
       }
     }
@@ -101,8 +119,12 @@ export default function ArchivePage() {
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json()
       setArchiveData(data)
-    } catch (err: any) {
-      console.error(err)
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Failed to load diary:", err.message)
+      } else {
+        console.error("Failed to load diary:", err)
+      }
       setError("Failed to load diary")
     } finally {
       setIsLoading(false)
@@ -236,8 +258,8 @@ export default function ArchivePage() {
         return
       }
 
-      const data = await res.json()
-      setUserInfo({ username: data.newUsername })
+      await fetchUserInfo()
+
       setIsEditingUsername(false)
       setNewUsername("")
       alert("Username changed successfully!")
