@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -25,13 +26,29 @@ interface ArchiveResponse {
 }
 
 export default function ArchivePage() {
+  const router = useRouter()
   const [dates, setDates] = useState<string[]>([])
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [archiveData, setArchiveData] = useState<ArchiveResponse | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
+  const [userInfo, setUserInfo] = useState<{ username: string } | null>(null)
 
   useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const token = localStorage.getItem("jwt")
+        if (token) {
+          // JWT 토큰에서 사용자 정보 추출 (토큰 디코딩)
+          const payload = JSON.parse(atob(token.split(".")[1]))
+          setUserInfo({ username: payload.username || payload.user_id || "User" })
+        }
+      } catch (err) {
+        console.error("Failed to decode token:", err)
+        setUserInfo({ username: "User" })
+      }
+    }
+
     const fetchDates = async () => {
       try {
         const token = localStorage.getItem("jwt")
@@ -56,6 +73,7 @@ export default function ArchivePage() {
       }
     }
 
+    fetchUserInfo()
     fetchDates()
   }, [])
 
@@ -83,6 +101,23 @@ export default function ArchivePage() {
     }
   }
 
+  // 채팅 페이지로 이동
+  const handleChatPageClick = () => {
+    router.push("/chat")
+  }
+
+  // 로그아웃 처리
+  const handleLogout = () => {
+    try {
+      // localStorage에서 JWT 토큰 제거
+      localStorage.removeItem("jwt")
+
+      // 로그인 페이지로 리다이렉트
+      router.push("/login")
+    } catch (err) {
+      console.error("Logout failed:", err)
+    }
+  }
   const createMarkup = (html: string) => ({ __html: html })
 
   const formatDate = (dateString: string) => {
@@ -108,10 +143,10 @@ export default function ArchivePage() {
         <div className="p-6 border-b border-slate-700/50">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
+            <User className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-white font-medium">Alex</h3>
+            <h3 className="text-white font-medium">{userInfo?.username || "Loading..."}</h3>
               <p className="text-slate-400 text-sm">Welcome back!</p>
             </div>
           </div>
@@ -123,9 +158,10 @@ export default function ArchivePage() {
             <Button
               variant="ghost"
               className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700/50"
+              onClick={handleChatPageClick}
             >
-              <FileText className="w-4 h-4 mr-3" />
-              My Page
+            <FileText className="w-4 h-4 mr-3" />
+              Chat Page
             </Button>
             <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
               <BookOpen className="w-4 h-4 mr-3" />
@@ -134,6 +170,7 @@ export default function ArchivePage() {
             <Button
               variant="ghost"
               className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700/50"
+              onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-3" />
               Log out
