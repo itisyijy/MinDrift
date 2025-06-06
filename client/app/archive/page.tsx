@@ -89,8 +89,12 @@ export default function ArchivePage() {
         if (data.dates.length > 0) {
           fetchArchive(data.dates[0])
         }
-      } catch (err: any) {
-        console.error(err)
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error("Failed to load diary dates:", err.message)
+        } else {
+          console.error("Failed to load diary dates:", err)
+        }
         setError("Failed to load diary dates")
       }
     }
@@ -115,8 +119,12 @@ export default function ArchivePage() {
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json()
       setArchiveData(data)
-    } catch (err: any) {
-      console.error(err)
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Failed to load diary:", err.message)
+      } else {
+        console.error("Failed to load diary:", err)
+      }
       setError("Failed to load diary")
     } finally {
       setIsLoading(false)
