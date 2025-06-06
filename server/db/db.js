@@ -1,20 +1,21 @@
-// server/db/db.js
+// Refactored and commented: server/db/db.js
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
+// Connect to SQLite database file
 const db = new sqlite3.Database(
   path.resolve(__dirname, "../users.db"),
   (err) => {
     if (err) {
-      console.error("Failed to connect to SQLite:", err.message);
+      console.error("SQLite connection failed:", err.message);
     } else {
-      console.log("Connected to SQLite database.");
+      console.log("SQLite connected");
     }
   }
 );
 
 db.serialize(() => {
-  // 사용자 테이블
+  // Create users table
   db.run(
     `
     CREATE TABLE IF NOT EXISTS users (
@@ -28,12 +29,12 @@ db.serialize(() => {
       if (err) {
         console.error("Failed to create users table:", err.message);
       } else {
-        console.log("✅ users table ready.");
+        console.log("Users table ready");
       }
     }
   );
 
-  // 메시지 테이블 (chat.js 용)
+  // Create messages table
   db.run(
     `
     CREATE TABLE IF NOT EXISTS messages (
@@ -49,12 +50,12 @@ db.serialize(() => {
       if (err) {
         console.error("Failed to create messages table:", err.message);
       } else {
-        console.log("✅ messages table ready.");
+        console.log("Messages table ready");
       }
     }
   );
 
-  // 📘 일기 테이블
+  // Create diaries table
   db.run(
     `
     CREATE TABLE IF NOT EXISTS diaries (
@@ -70,7 +71,7 @@ db.serialize(() => {
       if (err) {
         console.error("Failed to create diaries table:", err.message);
       } else {
-        console.log("✅ diaries table ready.");
+        console.log("Diaries table ready");
       }
     }
   );

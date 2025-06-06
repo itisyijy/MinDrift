@@ -2,18 +2,20 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Diary Test</title>
+    <title>Diary App Demo</title>
   </head>
   <body>
+    <!-- Register -->
     <h2>Register</h2>
     <input id="reg_user_id" placeholder="User ID" />
-    <input id="reg_username" placeholder="Name (username)" />
+    <input id="reg_username" placeholder="Username" />
     <input id="reg_password" type="password" placeholder="Password" />
     <input id="reg_confirm" type="password" placeholder="Confirm Password" />
     <button id="registerBtn">Register</button>
     <div id="registerResult"></div>
     <hr />
 
+    <!-- Login -->
     <h2>Login</h2>
     <input id="user_id" placeholder="User ID" />
     <input id="password" type="password" placeholder="Password" />
@@ -23,37 +25,44 @@
     <hr />
     <h3 id="welcome"></h3>
 
-    <h2>🧑‍💻 Change Username</h2>
+    <!-- Change Username -->
+    <h2>Change Username</h2>
     <input id="new_username" placeholder="New Username" />
-    <button id="changeUsernameBtn">Change Username</button>
+    <button id="changeUsernameBtn">Change</button>
     <div id="changeUsernameResult"></div>
 
-    <h2>✍️ Write Diary</h2>
-    <button id="generateFromHistory">📝 대화 기록 기반 자동 일기</button>
+    <hr />
+
+    <!-- Diary -->
+    <h2>Generate Diary</h2>
+    <button id="generateFromHistory">Generate from Chat History</button>
     <div id="diarySummary"></div>
 
     <hr />
-    <h2>📂 Diary Archive</h2>
-    <button id="loadArchiveDates">📅 Load Diary Dates</button>
+    <h2>Diary Archive</h2>
+    <button id="loadArchiveDates">Load Diary Dates</button>
     <ul id="diaryDateList"></ul>
 
     <input type="date" id="archiveDate" />
-    <button id="fetchArchiveBtn">🔍 Fetch by Date</button>
+    <button id="fetchArchiveBtn">Fetch by Date</button>
 
     <pre id="archiveResult"></pre>
 
     <hr />
 
-    <h2>🧠 Chat</h2>
+    <!-- Chat -->
+    <h2>Chat</h2>
     <input type="text" id="message" placeholder="Type a message" />
     <button id="sendMessageBtn">Send</button>
-
     <pre id="chat"></pre>
 
-    <button id="fetchMessagesBtn">Get Messages</button>
+    <button id="fetchMessagesBtn">Fetch Messages</button>
     <pre id="output"></pre>
 
-    <!-- ✅ JS는 맨 아래에서 로드 -->
-    <script src="demo.js"></script>
+    <!-- Load JS -->
+    <script src="./demo/auth-demo.js"></script>
+    <script src="./demo/chat-demo.js"></script>
+    <script src="./demo/diary-demo.js"></script>
+    <script src="./demo/main-demo.js"></script>
   </body>
 </html>

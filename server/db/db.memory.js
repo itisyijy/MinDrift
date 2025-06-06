@@ -1,14 +1,16 @@
+// Refactored and commented: server/db/db.memory.js
 const sqlite3 = require("sqlite3").verbose();
 
+// Create in-memory SQLite database (used for testing)
 const db = new sqlite3.Database(":memory:", (err) => {
   if (err) {
-    console.error("❌ Failed to connect to in-memory SQLite:", err.message);
+    console.error("Failed to connect to in-memory SQLite:", err.message);
   } else {
-    console.log("🧪 Connected to in-memory SQLite database.");
+    console.log("In-memory SQLite connected");
   }
 });
 
-// 테이블 생성 (테스트마다 새로 생성됨)
+// Create tables (recreated on each test)
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (

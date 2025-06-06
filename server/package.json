@@ -8,7 +8,8 @@
   "main": "test-db.js",
   "scripts": {
     "test": "NODE_ENV=test jest",
-    "dev": "nodemon --legacy-watch app.js"
+    "dev": "nodemon --legacy-watch app.js",
+    "start": "node app.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -1,15 +1,17 @@
+// Refactored and commented: server/routes/auth.js
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../db");
-const authenticateToken = require("../auth/middleware"); // 또는 "../auth/middleware" 경로에 맞게 조정
+const authenticateToken = require("../auth/middleware");
 
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET;
 
-// 회원가입
+// Register new user
 router.post("/register", async (req, res) => {
   const { user_id, username, password } = req.body;
+
   db.get(
     "SELECT * FROM users WHERE user_id = ?",
     [user_id],
@@ -30,34 +32,32 @@ router.post("/register", async (req, res) => {
   );
 });
 
-// 로그인 (JWT 발급)
+// Login and issue JWT
 router.post("/login", async (req, res) => {
   const { user_id, password } = req.body;
+
   db.get(
     "SELECT * FROM users WHERE user_id = ?",
     [user_id],
     async (err, user) => {
       if (err) return res.status(500).send("DB error");
       if (!user) return res.status(401).send("No user");
+
       const match = await bcrypt.compare(password, user.password);
       if (!match) return res.status(401).send("Wrong password");
 
       const token = jwt.sign(
         { id: user.id, user_id: user.user_id, username: user.username },
         SECRET,
-        {
-          expiresIn: "2h",
-        }
+        { expiresIn: "2h" }
       );
-      res.json({
-        token,
-        username: user.username,
-      });
+
+      res.json({ token, username: user.username });
     }
   );
 });
 
-// 인증된 사용자 정보 조회
+// Get authenticated user's info
 router.get("/me", authenticateToken, (req, res) => {
   const userId = req.user.id;
 
@@ -65,24 +65,20 @@ router.get("/me", authenticateToken, (req, res) => {
     "SELECT user_id, username FROM users WHERE id = ?",
     [userId],
     (err, user) => {
-      if (err) {
-        return res.status(500).send("DB error");
-      }
-      if (!user) {
-        return res.status(404).send("User not found");
-      }
+      if (err) return res.status(500).send("DB error");
+      if (!user) return res.status(404).send("User not found");
       res.json(user);
     }
   );
 });
 
-// PUT /auth/username - 사용자 이름 변경
+// Update username
 router.put("/username", authenticateToken, (req, res) => {
   const userId = req.user.id;
   const { newUsername } = req.body;
 
   if (!newUsername || newUsername.trim() === "") {
-    return res.status(400).json({ message: "새 이름을 입력하세요." });
+    return res.status(400).json({ message: "New username is required" });
   }
 
   db.run(
@@ -90,7 +86,7 @@ router.put("/username", authenticateToken, (req, res) => {
     [newUsername, userId],
     function (err) {
       if (err) {
-        console.error("❌ username 변경 실패:", err.message);
+        console.error("Username update failed:", err.message);
         return res.status(500).json({ message: "DB error" });
       }
       res.json({ message: "Username updated successfully", newUsername });
