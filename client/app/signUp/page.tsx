@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import Image from 'next/image'
 import Link from 'next/link'
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+
 export default function SignUpPage() {
   const router = useRouter()
   const [username, setUsername] = useState('')
@@ -27,7 +29,7 @@ export default function SignUpPage() {
   
     setError("")
   
-    const response = await fetch("http://localhost:8080/auth/register", {
+    const response = await fetch(`${BASE_URL}/api/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

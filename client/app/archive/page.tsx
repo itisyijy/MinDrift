@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Calendar, MessageCircle, User, LogOut, FileText, BookOpen, Loader2, Edit2, Trash2 } from "lucide-react"
 
+// Define base URL for API endpoints
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
+
 interface ChatRecord {
   role: "user" | "assistant"
   content: string
@@ -58,7 +61,7 @@ export default function ArchivePage() {
     const fetchDates = async () => {
       try {
         const token = localStorage.getItem("jwt")
-        const res = await fetch("http://localhost:8080/api/diary/dates", {
+        const res = await fetch(`${BASE_URL}/api/diary/dates`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -89,7 +92,7 @@ export default function ArchivePage() {
 
     try {
       const token = localStorage.getItem("jwt")
-      const res = await fetch(`http://localhost:8080/api/diary/archive?date=${date}`, {
+      const res = await fetch(`${BASE_URL}/api/diary/archive?date=${date}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -131,7 +134,7 @@ export default function ArchivePage() {
       const token = localStorage.getItem("jwt")
 
       // 1. Get diary ID by date
-      const res = await fetch(`http://localhost:8080/api/diary/id-by-date?date=${date}`, {
+      const res = await fetch(`${BASE_URL}/api/diary/id-by-date?date=${date}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -146,7 +149,7 @@ export default function ArchivePage() {
       const { id } = await res.json()
 
       // 3. Send delete request
-      const delRes = await fetch(`http://localhost:8080/api/diary/${id}`, {
+      const delRes = await fetch(`${BASE_URL}/api/diary/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -218,7 +221,7 @@ export default function ArchivePage() {
 
     try {
       const token = localStorage.getItem("jwt")
-      const res = await fetch("http://localhost:8080/auth/username", {
+      const res = await fetch(`${BASE_URL}/auth/username`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
