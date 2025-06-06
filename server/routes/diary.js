@@ -81,6 +81,8 @@ router.post("/diary", authenticateToken, async (req, res) => {
 router.post("/diary/from-history", authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const username = req.user.username;
+  
+  console.log(username);
 
   try {
     const history = await new Promise((resolve, reject) => {
