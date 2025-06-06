@@ -61,7 +61,7 @@ export default function LoginPage() {
       <div className="text-center mb-10">
         <div className="flex justify-center mb-4">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <img src="/placeholder.svg?height=112&width=112" alt="Mindrift Logo" className="w-28 h-auto" />
+            <img src="../images/logo.png" alt="Mindrift Logo" className="w-28 h-auto" />
           </div>
         </div>
         <p className="text-blue-100 text-2xl font-extrabold tracking-wide">Reflect your mind daily</p>
