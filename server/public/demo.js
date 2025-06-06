@@ -188,6 +188,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("loadArchiveDates")
     ?.addEventListener("click", loadDiaryDates);
+
+  // update username
+  document
+    .getElementById("changeUsernameBtn")
+    ?.addEventListener("click", changeUsername);
 });
 
 // ✅ 특정 날짜의 일기 기록 불러오기
@@ -268,4 +273,35 @@ async function loadDiaryDates() {
     console.error("Diary date load error:", err);
     alert("네트워크 오류 또는 서버 오류");
   }
+}
+
+// change username
+async function changeUsername() {
+  const newUsername = document.getElementById("new_username").value.trim();
+  const output = document.getElementById("changeUsernameResult");
+  const savedToken = localStorage.getItem("jwt");
+
+  if (!newUsername) {
+    output.innerText = "❗ 새 사용자 이름을 입력해주세요.";
+    return;
+  }
+
+  const res = await fetch("http://localhost:8080/auth/username", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + savedToken,
+    },
+    body: JSON.stringify({ newUsername }),
+  });
+
+  if (!res.ok) {
+    const msg = await res.text();
+    output.innerText = `❌ 실패: ${msg}`;
+    return;
+  }
+
+  const data = await res.json();
+  output.innerText = `✅ 변경 완료: ${data.newUsername}`;
+  await fetchUserInfo(); // 이름 다시 로딩
 }
