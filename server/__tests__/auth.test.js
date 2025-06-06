@@ -18,7 +18,7 @@ describe("Auth API", () => {
       password: "password123",
     });
 
-    expect([200, 409]).toContain(res.statusCode);
+    expect([201, 409]).toContain(res.statusCode);
   });
 
   it("should return a token on login", async () => {
