@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Calendar, MessageCircle, User, LogOut, FileText, BookOpen, Loader2 } from "lucide-react"
+import { Calendar, MessageCircle, User, LogOut, FileText, BookOpen, Loader2, Edit2 } from "lucide-react"
 
 interface ChatRecord {
   role: "user" | "assistant"
@@ -33,6 +33,8 @@ export default function ArchivePage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [userInfo, setUserInfo] = useState<{ username: string } | null>(null)
+  const [isEditingUsername, setIsEditingUsername] = useState(false)
+  const [newUsername, setNewUsername] = useState("")
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -135,22 +137,108 @@ export default function ArchivePage() {
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 일기`
   }
 
+  const handleUsernameChange = async () => {
+    if (!newUsername.trim()) {
+      alert("사용자명을 입력해주세요.")
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("jwt")
+      const res = await fetch("http://localhost:8080/auth/username", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newUsername: newUsername.trim() }),
+      })
+
+      if (!res.ok) {
+        const msg = await res.text()
+        alert(`변경 실패: ${msg}`)
+        return
+      }
+
+      const data = await res.json()
+      setUserInfo({ username: data.newUsername })
+      setIsEditingUsername(false)
+      setNewUsername("")
+      alert("사용자명이 성공적으로 변경되었습니다!")
+    } catch (err) {
+      console.error("Username change error:", err)
+      alert("네트워크 오류가 발생했습니다.")
+    }
+  }
+
+  const handleEditClick = () => {
+    setNewUsername(userInfo?.username || "")
+    setIsEditingUsername(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingUsername(false)
+    setNewUsername("")
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex">
       {/* 왼쪽 사이드바 */}
       <div className="w-80 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
         {/* 사용자 프로필 */}
-        <div className="p-6 border-b border-slate-700/50">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-white" />
-            </div>
-            <div>
-            <h3 className="text-white font-medium">{userInfo?.username || "Loading..."}</h3>
-              <p className="text-slate-400 text-sm">Welcome back!</p>
-            </div>
+<div className="p-6 border-b border-slate-700/50">
+  <div className="flex items-center space-x-3">
+    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+      <User className="w-5 h-5 text-white" />
+    </div>
+    <div className="flex-1">
+      {isEditingUsername ? (
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+            className="w-full px-2 py-1 text-sm bg-slate-700 text-white border border-slate-600 rounded focus:outline-none focus:border-blue-500"
+            placeholder="새 사용자명 입력"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleUsernameChange()
+              if (e.key === "Escape") handleCancelEdit()
+            }}
+          />
+          <div className="flex space-x-2">
+            <button
+              onClick={handleUsernameChange}
+              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              저장
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              className="px-2 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors"
+            >
+              취소
+            </button>
           </div>
         </div>
+      ) : (
+        <div className="flex items-center space-x-2">
+          <div>
+            <h3 className="text-white font-medium">{userInfo?.username || "Loading..."}</h3>
+            <p className="text-slate-400 text-sm">Welcome back!</p>
+          </div>
+          <button
+            onClick={handleEditClick}
+            className="p-1 text-slate-400 hover:text-white transition-colors"
+            title="사용자명 변경"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
         {/* 네비게이션 */}
         <div className="p-4 border-b border-slate-700/50">
