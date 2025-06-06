@@ -26,6 +26,12 @@ export default function SignUpPage() {
       setError("Passwords do not match")
       return
     }
+
+    // ✅ Check all fields are filled
+  if (!username || !userid || !password || !confirmPassword) {
+    alert("Please fill in all fields.")
+    return
+  }
   
     setError("")
   
