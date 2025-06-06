@@ -10,21 +10,25 @@ const SECRET = process.env.JWT_SECRET;
 // 회원가입
 router.post("/register", async (req, res) => {
   const { user_id, username, password } = req.body;
-  db.get("SELECT * FROM users WHERE user_id = ?", [user_id], async (err, user) => {
-    if (user) return res.status(409).json({ message: "Username already exists" });
+  db.get(
+    "SELECT * FROM users WHERE user_id = ?",
+    [user_id],
+    async (err, user) => {
+      if (user)
+        return res.status(409).json({ message: "Username already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    db.run(
-      "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
-      [user_id, username, hashed],
-      (err) => {
-        if (err) return res.status(500).json({ message: "DB error" });
-        res.status(201).json({ message: "Registered successfully" });
-      }
-    );
-  });
+      const hashed = await bcrypt.hash(password, 10);
+      db.run(
+        "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
+        [user_id, username, hashed],
+        (err) => {
+          if (err) return res.status(500).json({ message: "DB error" });
+          res.status(201).json({ message: "Registered successfully" });
+        }
+      );
+    }
+  );
 });
-
 
 // 로그인 (JWT 발급)
 router.post("/login", async (req, res) => {
@@ -45,10 +49,10 @@ router.post("/login", async (req, res) => {
           expiresIn: "2h",
         }
       );
-      res.json({ 
+      res.json({
         token,
         username: user.username,
-       });
+      });
     }
   );
 });
@@ -68,6 +72,28 @@ router.get("/me", authenticateToken, (req, res) => {
         return res.status(404).send("User not found");
       }
       res.json(user);
+    }
+  );
+});
+
+// PUT /auth/username - 사용자 이름 변경
+router.put("/username", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const { newUsername } = req.body;
+
+  if (!newUsername || newUsername.trim() === "") {
+    return res.status(400).json({ message: "새 이름을 입력하세요." });
+  }
+
+  db.run(
+    "UPDATE users SET username = ? WHERE id = ?",
+    [newUsername, userId],
+    function (err) {
+      if (err) {
+        console.error("❌ username 변경 실패:", err.message);
+        return res.status(500).json({ message: "DB error" });
+      }
+      res.json({ message: "Username updated successfully", newUsername });
     }
   );
 });
