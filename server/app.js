@@ -13,17 +13,15 @@ const app = express();
 
 app.use(helmet());
 
-// CORS 설정: HTML이 file:// 또는 localhost:5500에서 실행된다면 허용
 app.use(
   cors({
-    origin: "http://localhost:3000", // 또는 ["http://localhost:5500"]
+    origin: "http://localhost:3000",
     credentials: true,
-
   })
 );
 
 app.use(express.json());
-app.use(express.static("public")); // test-auth.html 등
+app.use(express.static("public"));
 
 // 라우터 등록
 app.use("/auth", authRoutes);
