@@ -1,6 +1,7 @@
 "use client"
 
-import { useRouter } from 'next/navigation'
+import type React from "react"
+import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -8,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Menu, X, User, FileText, LogOut, Send, Sparkles } from "lucide-react"
+
+// Define base URL for API endpoints
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
 
 interface JournalEntry {
   id: string
@@ -17,9 +21,8 @@ interface JournalEntry {
   reply?: string
 }
 
-
 export default function AIDiaryChatInterface() {
-  const [username, setUsername] = useState("Alex")
+  const [username, setUsername] = useState("User")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isEmotionalMode, setIsEmotionalMode] = useState(true)
   const [currentText, setCurrentText] = useState("")
@@ -27,11 +30,25 @@ export default function AIDiaryChatInterface() {
   const [prompts, setPrompts] = useState<string[]>([])
   const [summary, setSummary] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const router = useRouter() // useRouter 선언
+  const router = useRouter()
 
+  // Load user info from JWT token
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username")
-    if (storedUsername) setUsername(storedUsername)
+    const fetchUserInfo = async () => {
+      try {
+        const token = localStorage.getItem("jwt")
+        if (token) {
+          // Extract user info from JWT token
+          const payload = JSON.parse(atob(token.split(".")[1]))
+          setUsername(payload.username || payload.user_id || "User")
+        }
+      } catch (err) {
+        console.error("Failed to decode token:", err)
+        setUsername("User")
+      }
+    }
+
+    fetchUserInfo()
   }, [])
 
   useEffect(() => {
@@ -53,7 +70,7 @@ export default function AIDiaryChatInterface() {
     setCurrentText("")
 
     try {
-      const res = await fetch("http://localhost:8080/api/chat", {
+      const res = await fetch(`${BASE_URL}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,7 +96,7 @@ export default function AIDiaryChatInterface() {
 
   const handleGenerateDiary = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/diary/from-history", {
+      const response = await fetch(`${BASE_URL}/api/diary/from-history`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,12 +132,19 @@ export default function AIDiaryChatInterface() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-slate-200 transition-all duration-500">
       <div className="fixed top-4 left-4 z-50">
-        <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-full hover:bg-blue-800/50 text-slate-200">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="rounded-full hover:bg-blue-800/50 text-slate-200"
+        >
           {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
       </div>
 
-      <div className={`fixed top-0 left-0 h-full w-80 transform transition-transform duration-300 z-40 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"} bg-slate-900/95 backdrop-blur-md border-r border-blue-800/50`}>
+      <div
+        className={`fixed top-0 left-0 h-full w-80 transform transition-transform duration-300 z-40 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"} bg-slate-900/95 backdrop-blur-md border-r border-blue-800/50`}
+      >
         <div className="p-6 pt-20">
           <div className="mb-8">
             <div className="flex items-center space-x-3 mb-4">
@@ -135,17 +159,23 @@ export default function AIDiaryChatInterface() {
           </div>
 
           <nav className="space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200"
-              onClick={() => router.push("/archive")} // ✅ 아카이브 페이지로 이동
-            > <FileText className="mr-3 h-4 w-4" />
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200"
+              onClick={() => router.push("/archive")}
+            >
+              <FileText className="mr-3 h-4 w-4" />
               Archive
-
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200" onClick={() => {
-              localStorage.removeItem("jwt")
-              localStorage.removeItem("username")
-              window.location.href = "/login"
-            }}>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-slate-200 hover:bg-blue-700/60 hover:text-slate-200"
+              onClick={() => {
+                localStorage.removeItem("jwt")
+                localStorage.removeItem("username")
+                window.location.href = "/login"
+              }}
+            >
               <LogOut className="mr-3 h-4 w-4" />
               Log out
             </Button>
@@ -171,13 +201,20 @@ export default function AIDiaryChatInterface() {
                     </div>
                   ) : (
                     entries.map((entry) => (
-                      <div key={entry.id} className={`flex ${entry.id.includes("bot") ? "justify-start" : "justify-end"}`}>
+                      <div
+                        key={entry.id}
+                        className={`flex ${entry.id.includes("bot") ? "justify-start" : "justify-end"}`}
+                      >
                         <div className="max-w-[80%]">
-                          <div className={`rounded-2xl px-4 py-3 shadow-sm ${entry.id.includes("bot") ? "bg-purple-700 text-white" : "bg-blue-600 text-white"}`}>
+                          <div
+                            className={`rounded-2xl px-4 py-3 shadow-sm ${entry.id.includes("bot") ? "bg-purple-700 text-white" : "bg-blue-600 text-white"}`}
+                          >
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">{entry.text}</p>
                           </div>
                           <div className="flex items-center justify-end mt-1 space-x-2">
-                            <span className={`text-xs px-2 py-1 rounded-full ${entry.mode === "emotional" ? "bg-purple-900/50 text-purple-300" : "bg-blue-900/50 text-blue-300"}`}>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${entry.mode === "emotional" ? "bg-purple-900/50 text-purple-300" : "bg-blue-900/50 text-blue-300"}`}
+                            >
                               {entry.mode === "emotional" ? "💭 Emotional" : "📝 Record"}
                             </span>
                             <span className="text-xs text-slate-400">{formatTime(entry.timestamp)}</span>
@@ -244,10 +281,7 @@ export default function AIDiaryChatInterface() {
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto">
                 {summary ? (
-                  <div
-                    className="text-slate-300"
-                    dangerouslySetInnerHTML={{ __html: summary }}
-                  />
+                  <div className="text-slate-300" dangerouslySetInnerHTML={{ __html: summary }} />
                 ) : (
                   <div className="text-center py-8 text-slate-400">
                     <p className="text-sm">AI insights will appear here after you generate your diary</p>

@@ -1,23 +1,30 @@
-'use client'
+"use client"
 
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import Link from 'next/link'
+import type React from "react"
+
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import Link from "next/link"
+
+// Define base URL for API endpoints
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [user_id, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [user_id, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    setIsLoading(true)
 
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -25,7 +32,6 @@ export default function LoginPage() {
           password,
         }),
       })
-      
 
       if (!response.ok) {
         const errText = await response.text()
@@ -44,6 +50,8 @@ export default function LoginPage() {
     } catch (error) {
       console.error("❌ Fail Login Request:", error)
       alert("Cannot access to the server")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -53,7 +61,7 @@ export default function LoginPage() {
       <div className="text-center mb-10">
         <div className="flex justify-center mb-4">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <img src="/images/logo.png" alt="Mindrift Logo" className="w-28 h-auto" />
+            <img src="/placeholder.svg?height=112&width=112" alt="Mindrift Logo" className="w-28 h-auto" />
           </div>
         </div>
         <p className="text-blue-100 text-2xl font-extrabold tracking-wide">Reflect your mind daily</p>
@@ -73,11 +81,13 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="username"
-                type="text" // ✅ email 타입에서 일반 text로 변경
+                type="text"
                 value={user_id}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your ID"
                 className="bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 focus:ring-blue-500"
+                disabled={isLoading}
+                required
               />
             </div>
 
@@ -92,12 +102,14 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 className="bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 focus:ring-blue-500"
+                disabled={isLoading}
+                required
               />
             </div>
 
             <div className="space-y-3 pt-2">
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                Log in
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Log in"}
               </Button>
             </div>
           </form>
@@ -106,7 +118,7 @@ export default function LoginPage() {
 
       <div className="mt-8 text-center">
         <p className="text-sm text-slate-300">
-          Don&apos;t have an account?{' '}
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="font-medium text-blue-400 hover:text-blue-300">
             Sign up
           </Link>
