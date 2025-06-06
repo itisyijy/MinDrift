@@ -188,6 +188,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("loadArchiveDates")
     ?.addEventListener("click", loadDiaryDates);
+
+  // update username
+  document
+    .getElementById("changeUsernameBtn")
+    ?.addEventListener("click", changeUsername);
 });
 
 // ✅ 특정 날짜의 일기 기록 불러오기
@@ -258,14 +263,95 @@ async function loadDiaryDates() {
 
     data.dates.forEach((date) => {
       const li = document.createElement("li");
+
       const btn = document.createElement("button");
       btn.textContent = date;
       btn.onclick = () => fetchDiaryArchive(date);
       li.appendChild(btn);
+
+      // 🗑 삭제 버튼 추가
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "🗑 Delete";
+      delBtn.onclick = () => deleteDiaryByDate(date);
+      li.appendChild(delBtn);
+
       ul.appendChild(li);
     });
   } catch (err) {
     console.error("Diary date load error:", err);
     alert("네트워크 오류 또는 서버 오류");
+  }
+}
+
+// change username
+async function changeUsername() {
+  const newUsername = document.getElementById("new_username").value.trim();
+  const output = document.getElementById("changeUsernameResult");
+  const savedToken = localStorage.getItem("jwt");
+
+  if (!newUsername) {
+    output.innerText = "❗ 새 사용자 이름을 입력해주세요.";
+    return;
+  }
+
+  const res = await fetch("http://localhost:8080/auth/username", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + savedToken,
+    },
+    body: JSON.stringify({ newUsername }),
+  });
+
+  if (!res.ok) {
+    const msg = await res.text();
+    output.innerText = `❌ 실패: ${msg}`;
+    return;
+  }
+
+  const data = await res.json();
+  output.innerText = `✅ 변경 완료: ${data.newUsername}`;
+  await fetchUserInfo(); // 이름 다시 로딩
+}
+
+async function deleteDiaryByDate(date) {
+  const token = localStorage.getItem("jwt");
+
+  try {
+    const res = await fetch(`/api/diary/id-by-date?date=${date}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      alert("일기 ID 조회 실패");
+      return;
+    }
+
+    const { id } = await res.json();
+
+    console.log("??");
+
+    const confirmDelete = confirm(`정말로 ${date}의 일기를 삭제하시겠습니까?`);
+    if (!confirmDelete) return;
+
+    const delRes = await fetch(`/api/diary/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const result = await delRes.json();
+    if (delRes.ok) {
+      alert("✅ 삭제 완료");
+      loadDiaryDates(); // 목록 갱신
+    } else {
+      alert("❌ 삭제 실패: " + result.error);
+    }
+  } catch (err) {
+    alert("네트워크 오류");
   }
 }
