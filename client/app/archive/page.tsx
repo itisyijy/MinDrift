@@ -35,7 +35,7 @@ export default function ArchivePage() {
   const [userInfo, setUserInfo] = useState<{ username: string } | null>(null)
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [newUsername, setNewUsername] = useState("")
-  const [deleteConfirm, setDeleteConfirm] = useState<{ 
+  const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean
     date: string
     title: string
@@ -46,7 +46,6 @@ export default function ArchivePage() {
       try {
         const token = localStorage.getItem("jwt")
         if (token) {
-          // JWT 토큰에서 사용자 정보 추출 (토큰 디코딩)
           const payload = JSON.parse(atob(token.split(".")[1]))
           setUserInfo({ username: payload.username || payload.user_id || "User" })
         }
@@ -70,13 +69,12 @@ export default function ArchivePage() {
         const data = await res.json()
         setDates(data.dates)
 
-        // 가장 최신 날짜를 자동 선택
         if (data.dates.length > 0) {
           fetchArchive(data.dates[0])
         }
       } catch (err: any) {
         console.error(err)
-        setError("일기 날짜 불러오기 실패")
+        setError("Failed to load diary dates")
       }
     }
 
@@ -102,21 +100,21 @@ export default function ArchivePage() {
       setArchiveData(data)
     } catch (err: any) {
       console.error(err)
-      setError("일기 불러오기 실패")
+      setError("Failed to load diary")
     } finally {
       setIsLoading(false)
     }
   }
 
-    // 일기 삭제 함수
+  // Diary deletion function
   const deleteDiaryByDate = async (date: string) => {
     try {
-      // 2. 삭제 확인 팝업 (영어로)
+      // 2. Delete confirmation popup (in English)
       const dateObj = new Date(date)
       const monthName = dateObj.toLocaleDateString("en-US", { month: "long" })
       const day = dateObj.getDate()
 
-      // 커스텀 다이얼로그 열기
+      // Open custom dialog
       setDeleteConfirm({
         isOpen: true,
         date: date,
@@ -128,82 +126,78 @@ export default function ArchivePage() {
     }
   }
 
-   const confirmDelete = async (date: string) => {
-      try {
-        const token = localStorage.getItem("jwt")
-  
-        // 1. 날짜로 일기 ID 조회
-        const res = await fetch(`http://localhost:8080/api/diary/id-by-date?date=${date}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-  
-        if (!res.ok) {
-          alert("Failed to fetch diary ID")
-          return
-        }
-  
-        const { id } = await res.json()
-  
-        // 3. 실제 삭제 요청
-        const delRes = await fetch(`http://localhost:8080/api/diary/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-  
-        const result = await delRes.json()
-  
-        if (delRes.ok) {
-          alert("✅ Diary deleted successfully")
-  
-          // 4. 목록 갱신
-          const updatedDates = dates.filter((d) => d !== date)
-          setDates(updatedDates)
-  
-          // 삭제된 일기가 현재 선택된 일기라면 다른 일기 선택
-          if (selectedDate === date) {
-            if (updatedDates.length > 0) {
-              fetchArchive(updatedDates[0])
-            } else {
-              setSelectedDate(null)
-              setArchiveData(null)
-            }
-          }
-        } else {
-          alert("❌ Failed to delete diary: " + (result.error || "Unknown error"))
-        }
-      } catch (err) {
-        console.error("Delete diary error:", err)
-        alert("Network error occurred")
+  const confirmDelete = async (date: string) => {
+    try {
+      const token = localStorage.getItem("jwt")
+
+      // 1. Get diary ID by date
+      const res = await fetch(`http://localhost:8080/api/diary/id-by-date?date=${date}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!res.ok) {
+        alert("Failed to fetch diary ID")
+        return
       }
+
+      const { id } = await res.json()
+
+      // 3. Send delete request
+      const delRes = await fetch(`http://localhost:8080/api/diary/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const result = await delRes.json()
+
+      if (delRes.ok) {
+        alert("✅ Diary deleted successfully")
+
+        // 4. Update list
+        const updatedDates = dates.filter((d) => d !== date)
+        setDates(updatedDates)
+
+        // If deleted diary was selected, select another one
+        if (selectedDate === date) {
+          if (updatedDates.length > 0) {
+            fetchArchive(updatedDates[0])
+          } else {
+            setSelectedDate(null)
+            setArchiveData(null)
+          }
+        }
+      } else {
+        alert("❌ Failed to delete diary: " + (result.error || "Unknown error"))
+      }
+    } catch (err) {
+      console.error("Delete diary error:", err)
+      alert("Network error occurred")
+    }
   }
 
-  // 채팅 페이지로 이동
   const handleChatPageClick = () => {
     router.push("/chat")
   }
 
-  // 로그아웃 처리
   const handleLogout = () => {
     try {
-      // localStorage에서 JWT 토큰 제거
       localStorage.removeItem("jwt")
-
-      // 로그인 페이지로 리다이렉트
       router.push("/login")
     } catch (err) {
       console.error("Logout failed:", err)
     }
   }
+
   const createMarkup = (html: string) => ({ __html: html })
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", {
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -213,12 +207,12 @@ export default function ArchivePage() {
 
   const generateDiaryTitle = (dateString: string) => {
     const date = new Date(dateString)
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 일기`
+    return `Diary for ${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
   }
 
   const handleUsernameChange = async () => {
     if (!newUsername.trim()) {
-      alert("사용자명을 입력해주세요.")
+      alert("Please enter a username.")
       return
     }
 
@@ -235,7 +229,7 @@ export default function ArchivePage() {
 
       if (!res.ok) {
         const msg = await res.text()
-        alert(`변경 실패: ${msg}`)
+        alert(`Change failed: ${msg}`)
         return
       }
 
@@ -243,10 +237,10 @@ export default function ArchivePage() {
       setUserInfo({ username: data.newUsername })
       setIsEditingUsername(false)
       setNewUsername("")
-      alert("사용자명이 성공적으로 변경되었습니다!")
+      alert("Username changed successfully!")
     } catch (err) {
       console.error("Username change error:", err)
-      alert("네트워크 오류가 발생했습니다.")
+      alert("Network error occurred.")
     }
   }
 
@@ -262,64 +256,64 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex">
-      {/* 왼쪽 사이드바 */}
+      {/* Left sidebar */}
       <div className="w-80 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
-        {/* 사용자 프로필 */}
-<div className="p-6 border-b border-slate-700/50">
-  <div className="flex items-center space-x-3">
-    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-      <User className="w-5 h-5 text-white" />
-    </div>
-    <div className="flex-1">
-      {isEditingUsername ? (
-        <div className="space-y-2">
-          <input
-            type="text"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-            className="w-full px-2 py-1 text-sm bg-slate-700 text-white border border-slate-600 rounded focus:outline-none focus:border-blue-500"
-            placeholder="새 사용자명 입력"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleUsernameChange()
-              if (e.key === "Escape") handleCancelEdit()
-            }}
-          />
-          <div className="flex space-x-2">
-            <button
-              onClick={handleUsernameChange}
-              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              저장
-            </button>
-            <button
-              onClick={handleCancelEdit}
-              className="px-2 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors"
-            >
-              취소
-            </button>
+        {/* User profile */}
+        <div className="p-6 border-b border-slate-700/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              {isEditingUsername ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    className="w-full px-2 py-1 text-sm bg-slate-700 text-white border border-slate-600 rounded focus:outline-none focus:border-blue-500"
+                    placeholder="Enter new username"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleUsernameChange()
+                      if (e.key === "Escape") handleCancelEdit()
+                    }}
+                  />
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleUsernameChange}
+                      className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-2 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <div>
+                    <h3 className="text-white font-medium">{userInfo?.username || "Loading..."}</h3>
+                    <p className="text-slate-400 text-sm">Welcome back!</p>
+                  </div>
+                  <button
+                    onClick={handleEditClick}
+                    className="p-1 text-slate-400 hover:text-white transition-colors"
+                    title="Change username"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="flex items-center space-x-2">
-          <div>
-            <h3 className="text-white font-medium">{userInfo?.username || "Loading..."}</h3>
-            <p className="text-slate-400 text-sm">Welcome back!</p>
-          </div>
-          <button
-            onClick={handleEditClick}
-            className="p-1 text-slate-400 hover:text-white transition-colors"
-            title="사용자명 변경"
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-</div>
 
-        {/* 네비게이션 */}
+        {/* Navigation */}
         <div className="p-4 border-b border-slate-700/50">
           <nav className="space-y-2">
             <Button
@@ -327,7 +321,7 @@ export default function ArchivePage() {
               className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700/50"
               onClick={handleChatPageClick}
             >
-            <FileText className="w-4 h-4 mr-3" />
+              <FileText className="w-4 h-4 mr-3" />
               Chat Page
             </Button>
             <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
@@ -345,11 +339,11 @@ export default function ArchivePage() {
           </nav>
         </div>
 
-        {/* 일기 목록 */}
+        {/* Diary list */}
         <div className="flex-1 p-4">
           <h4 className="text-slate-300 font-medium mb-4 flex items-center">
             <Calendar className="w-4 h-4 mr-2" />
-            일기 목록 ({dates.length})
+            Diary List ({dates.length})
           </h4>
           <ScrollArea className="h-full">
             <div className="space-y-3">
@@ -374,7 +368,7 @@ export default function ArchivePage() {
                         </div>
                         <button
                           onClick={(e) => {
-                            e.stopPropagation() // 카드 클릭 이벤트 방지
+                            e.stopPropagation() // Prevent card click event
                             deleteDiaryByDate(date)
                           }}
                           className="p-1 text-gray-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
@@ -393,20 +387,20 @@ export default function ArchivePage() {
         </div>
       </div>
 
-      {/* 메인 콘텐츠 영역 */}
+      {/* Main content area */}
       <div className="flex-1 p-8 overflow-hidden">
         <div className="h-full flex flex-col">
-          {/* 헤더 */}
+          {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">📚 일기 아카이브</h1>
-            <p className="text-slate-400">AI가 작성해준 소중한 일기들을 확인해보세요</p>
+            <h1 className="text-3xl font-bold text-white mb-2">📚 Diary Archive</h1>
+            <p className="text-slate-400">Check out the precious diaries written by AI</p>
           </div>
 
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center space-x-2 text-white">
                 <Loader2 className="w-6 h-6 animate-spin" />
-                <span>일기를 불러오는 중...</span>
+                <span>Loading diary...</span>
               </div>
             </div>
           ) : error ? (
@@ -414,18 +408,18 @@ export default function ArchivePage() {
               <div className="text-center">
                 <div className="text-red-400 mb-4">{error}</div>
                 <Button onClick={() => window.location.reload()} variant="outline">
-                  다시 시도
+                  Try Again
                 </Button>
               </div>
             </div>
           ) : archiveData?.diary ? (
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
-              {/* AI 일기 내용 */}
+              {/* AI diary content */}
               <Card className="bg-slate-800/30 backdrop-blur-sm border-slate-700/50 flex flex-col">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-white flex items-center space-x-2">
                     <span>🤖</span>
-                    <span>AI 일기</span>
+                    <span>AI Diary</span>
                   </CardTitle>
                   <p className="text-slate-400 text-sm">{formatDate(selectedDate || "")}</p>
                 </CardHeader>
@@ -441,14 +435,14 @@ export default function ArchivePage() {
                 </CardContent>
               </Card>
 
-              {/* 채팅 기록 */}
+              {/* Chat history */}
               <Card className="bg-slate-800/30 backdrop-blur-sm border-slate-700/50 flex flex-col">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-white flex items-center space-x-2">
                     <MessageCircle className="w-5 h-5" />
-                    <span>채팅 기록</span>
+                    <span>Chat History</span>
                   </CardTitle>
-                  <p className="text-slate-400 text-sm">{archiveData.messages.length}개의 대화</p>
+                  <p className="text-slate-400 text-sm">{archiveData.messages.length} conversations</p>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden">
                   <ScrollArea className="h-full">
@@ -480,13 +474,13 @@ export default function ArchivePage() {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-slate-400">
                 <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>일기를 선택해주세요</p>
+                <p>Please select a diary</p>
               </div>
             </div>
           )}
         </div>
       </div>
-      {/* 삭제 확인 다이얼로그 */}
+      {/* Delete confirmation dialog */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-700">
