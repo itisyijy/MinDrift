@@ -101,18 +101,45 @@ router.post("/diary/from-history", authenticateToken, async (req, res) => {
     }
 
     const reply = await generateDiarySummary(diaryText, username);
+    const today = new Date().toISOString().split("T")[0];
 
-    const now = new Date().toISOString();
-
-    db.run(
-      "INSERT INTO diaries (user_id, content, summary, created_at) VALUES (?, ?, ?, ?)",
-      [userId, diaryText, reply, now],
-      function (err) {
+    // 이미 오늘 날짜의 일기가 있는지 확인
+    db.get(
+      `SELECT id FROM diaries WHERE user_id = ? AND date(created_at) = ?`,
+      [userId, today],
+      (err, row) => {
         if (err) {
-          console.error("❌ diary insert error:", err.message);
-          return res.status(500).json({ error: "저장 실패" });
+          console.error("❌ diary select error:", err.message);
+          return res.status(500).json({ error: "DB 조회 실패" });
         }
-        res.json({ id: this.lastID, reply });
+
+        if (row) {
+          // ✅ 이미 존재 → UPDATE
+          db.run(
+            `UPDATE diaries SET content = ?, summary = ?, created_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [diaryText, reply, row.id],
+            function (err) {
+              if (err) {
+                console.error("❌ diary update error:", err.message);
+                return res.status(500).json({ error: "업데이트 실패" });
+              }
+              res.json({ id: row.id, reply, updated: true });
+            }
+          );
+        } else {
+          // ✅ 없으면 INSERT
+          db.run(
+            `INSERT INTO diaries (user_id, content, summary, created_at) VALUES (?, ?, ?, ?)`,
+            [userId, diaryText, reply, new Date().toISOString()],
+            function (err) {
+              if (err) {
+                console.error("❌ diary insert error:", err.message);
+                return res.status(500).json({ error: "저장 실패" });
+              }
+              res.json({ id: this.lastID, reply, created: true });
+            }
+          );
+        }
       }
     );
   } catch (err) {
@@ -179,6 +206,53 @@ router.get("/diary/dates", authenticateToken, (req, res) => {
       }
       const dates = rows.map((row) => row.date);
       res.json({ dates });
+    }
+  );
+});
+
+router.get("/diary/id-by-date", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const date = req.query.date;
+  console.log("📥 ID 조회 요청:", { userId, date });
+
+  db.get(
+    `SELECT id FROM diaries WHERE user_id = ? AND date(created_at) = ? ORDER BY created_at ASC LIMIT 1`,
+    [userId, date],
+    (err, row) => {
+      if (err) {
+        console.error("❌ id-by-date DB error:", err.message);
+        return res.status(500).json({ error: "일기 조회 실패" });
+      }
+      if (!row) {
+        console.warn("⚠️ 일기 없음: ", { userId, date });
+        return res
+          .status(404)
+          .json({ error: "해당 날짜의 일기를 찾을 수 없습니다." });
+      }
+      res.json({ id: row.id });
+    }
+  );
+});
+
+// 📤 DELETE /api/diary/:id → 특정 일기 삭제
+router.delete("/diary/:id", authenticateToken, (req, res) => {
+  const diaryId = req.params.id;
+  const userId = req.user.id;
+
+  db.run(
+    `DELETE FROM diaries WHERE id = ? AND user_id = ?`,
+    [diaryId, userId],
+    function (err) {
+      if (err) {
+        console.error("❌ diary delete error:", err.message);
+        return res.status(500).json({ error: "삭제 실패" });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: "해당 일기를 찾을 수 없음" });
+      }
+
+      res.json({ message: "삭제 완료", deletedId: diaryId });
     }
   );
 });
