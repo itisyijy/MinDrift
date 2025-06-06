@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Calendar, MessageCircle, User, LogOut, FileText, BookOpen, Loader2, Edit2 } from "lucide-react"
+import { Calendar, MessageCircle, User, LogOut, FileText, BookOpen, Loader2, Edit2, Trash2 } from "lucide-react"
 
 interface ChatRecord {
   role: "user" | "assistant"
@@ -35,6 +35,11 @@ export default function ArchivePage() {
   const [userInfo, setUserInfo] = useState<{ username: string } | null>(null)
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [newUsername, setNewUsername] = useState("")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ 
+    isOpen: boolean
+    date: string
+    title: string
+  } | null>(null)
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -101,6 +106,80 @@ export default function ArchivePage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+    // 일기 삭제 함수
+  const deleteDiaryByDate = async (date: string) => {
+    try {
+      // 2. 삭제 확인 팝업 (영어로)
+      const dateObj = new Date(date)
+      const monthName = dateObj.toLocaleDateString("en-US", { month: "long" })
+      const day = dateObj.getDate()
+
+      // 커스텀 다이얼로그 열기
+      setDeleteConfirm({
+        isOpen: true,
+        date: date,
+        title: `${monthName} ${day}`,
+      })
+    } catch (err) {
+      console.error("Delete diary error:", err)
+      alert("Network error occurred")
+    }
+  }
+
+   const confirmDelete = async (date: string) => {
+      try {
+        const token = localStorage.getItem("jwt")
+  
+        // 1. 날짜로 일기 ID 조회
+        const res = await fetch(`http://localhost:8080/api/diary/id-by-date?date=${date}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+  
+        if (!res.ok) {
+          alert("Failed to fetch diary ID")
+          return
+        }
+  
+        const { id } = await res.json()
+  
+        // 3. 실제 삭제 요청
+        const delRes = await fetch(`http://localhost:8080/api/diary/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+  
+        const result = await delRes.json()
+  
+        if (delRes.ok) {
+          alert("✅ Diary deleted successfully")
+  
+          // 4. 목록 갱신
+          const updatedDates = dates.filter((d) => d !== date)
+          setDates(updatedDates)
+  
+          // 삭제된 일기가 현재 선택된 일기라면 다른 일기 선택
+          if (selectedDate === date) {
+            if (updatedDates.length > 0) {
+              fetchArchive(updatedDates[0])
+            } else {
+              setSelectedDate(null)
+              setArchiveData(null)
+            }
+          }
+        } else {
+          alert("❌ Failed to delete diary: " + (result.error || "Unknown error"))
+        }
+      } catch (err) {
+        console.error("Delete diary error:", err)
+        alert("Network error occurred")
+      }
   }
 
   // 채팅 페이지로 이동
@@ -277,18 +356,32 @@ export default function ArchivePage() {
               {dates.map((date) => (
                 <Card
                   key={date}
-                  className={`cursor-pointer transition-all duration-200 ${
+                  className={`transition-all duration-200 ${
                     selectedDate === date
                       ? "bg-blue-600/20 border-blue-500/50 shadow-lg"
                       : "bg-slate-800/30 border-slate-700/50 hover:bg-slate-700/30 hover:border-slate-600/50"
                   }`}
-                  onClick={() => fetchArchive(date)}
                 >
                   <CardContent className="p-4">
                     <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-blue-400" />
-                        <p className="text-white text-sm font-medium">{generateDiaryTitle(date)}</p>
+                      <div
+                        className="flex items-center justify-between cursor-pointer"
+                        onClick={() => fetchArchive(date)}
+                      >
+                        <div className="flex items-center space-x-2 flex-1">
+                          <Calendar className="w-4 h-4 text-blue-400" />
+                          <p className="text-white text-sm font-medium">{generateDiaryTitle(date)}</p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation() // 카드 클릭 이벤트 방지
+                            deleteDiaryByDate(date)
+                          }}
+                          className="p-1 text-gray-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                          title="Delete diary"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                       <p className="text-slate-400 text-xs">{formatDate(date)}</p>
                     </div>
@@ -393,6 +486,33 @@ export default function ArchivePage() {
           )}
         </div>
       </div>
+      {/* 삭제 확인 다이얼로그 */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-700">
+            <h3 className="text-white text-lg font-semibold mb-4">Delete Diary</h3>
+            <p className="text-slate-300 mb-6">Do you want to delete the diary for {deleteConfirm.title}?</p>
+            <div className="flex space-x-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirm(null)}
+                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  await confirmDelete(deleteConfirm.date)
+                  setDeleteConfirm(null)
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
