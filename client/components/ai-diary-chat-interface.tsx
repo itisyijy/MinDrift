@@ -32,22 +32,34 @@ export default function AIDiaryChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const router = useRouter()
 
-  // Load user info from JWT token
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const token = localStorage.getItem("jwt")
-        if (token) {
-          // Extract user info from JWT token
-          const payload = JSON.parse(atob(token.split(".")[1]))
-          setUsername(payload.username || payload.user_id || "User")
-        }
-      } catch (err) {
-        console.error("Failed to decode token:", err)
+  const fetchUserInfo = async () => {
+    try {
+      const token = localStorage.getItem("jwt")
+      if (!token) {
+        setUsername("User")
+        return
+      }
+  
+      const res = await fetch(`${BASE_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+  
+      if (res.ok) {
+        const data = await res.json()
+        setUsername(data.username)
+      } else {
         setUsername("User")
       }
+    } catch (err) {
+      console.error("Failed to fetch user info from server:", err)
+      setUsername("User")
     }
+  }
 
+  // Load user info from JWT token
+  useEffect(() => {
     fetchUserInfo()
   }, [])
 
