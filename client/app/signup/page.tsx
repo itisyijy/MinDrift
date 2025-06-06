@@ -29,7 +29,7 @@ export default function SignUpPage() {
   
     setError("")
   
-    const response = await fetch(`${BASE_URL}/api/auth/signup`, {
+    const response = await fetch(`${BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
