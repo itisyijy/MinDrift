@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Calendar, MessageCircle, User, LogOut, FileText, BookOpen, Loader2, Edit2, Trash2 } from "lucide-react"
+import { Calendar, MessageCircle, User, LogOut, FileText, BookOpen, Loader2, Edit2, Trash2, Menu } from "lucide-react"
 
 // Define base URL for API endpoints
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
@@ -44,6 +44,27 @@ export default function ArchivePage() {
     title: string
   } | null>(null)
 
+  // Custom hook for responsive design
+  const useMediaQuery = (query: string) => {
+    const [matches, setMatches] = useState(false)
+
+    useEffect(() => {
+      const media = window.matchMedia(query)
+      if (media.matches !== matches) {
+        setMatches(media.matches)
+      }
+
+      const listener = () => setMatches(media.matches)
+      window.addEventListener("resize", listener)
+      return () => window.removeEventListener("resize", listener)
+    }, [matches, query])
+
+    return matches
+  }
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(true)
+  const isMobile = useMediaQuery("(max-width: 768px)")
+
   const fetchUserInfo = async () => {
     try {
       const token = localStorage.getItem("jwt")
@@ -51,13 +72,13 @@ export default function ArchivePage() {
         setUserInfo({ username: "User" })
         return
       }
-  
+
       const res = await fetch(`${BASE_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
-  
+
       if (res.ok) {
         const data = await res.json()
         setUserInfo({ username: data.username })
@@ -281,10 +302,16 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex">
-      {/* Left sidebar */}
-      <div className="w-80 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
+      {/* Left sidebar - responsive */}
+      <div
+        className={`${
+          isMobile
+          ? `fixed z-30 h-full w-80 transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "left-0" : "-left-full"}`
+            : "w-80"
+        } bg-slate-800/50 backdrop-blur-sm border-r border-slate-700/50 flex flex-col`}
+      >
         {/* User profile */}
-        <div className="p-6 border-b border-slate-700/50">
+        <div className={`p-6 border-b border-slate-700/50 ${isMobile ? "pl-16" : ""}`}>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
               <User className="w-5 h-5 text-white" />
@@ -413,8 +440,19 @@ export default function ArchivePage() {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 p-8 overflow-hidden">
-        <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-hidden relative">
+        {/* Mobile menu toggle button */}
+        {isMobile && (
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="fixed top-4 left-4 z-40 p-2 bg-blue-600 rounded-md shadow-lg"
+            aria-label="Toggle menu"
+          >
+            <Menu className="h-5 w-5 text-white" />
+          </button>
+        )}
+
+      <div className={`h-full flex flex-col ${isMobile ? "pt-16 px-4" : "pt-0 px-8"}`}>
           {/* Header */}
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-white mb-2">📚 Diary Archive</h1>
@@ -503,7 +541,7 @@ export default function ArchivePage() {
               </div>
             </div>
           )}
-        </div>
+      </div>
       </div>
       {/* Delete confirmation dialog */}
       {deleteConfirm && (
@@ -531,6 +569,10 @@ export default function ArchivePage() {
             </div>
           </div>
         </div>
+      )}
+      {/* Mobile overlay when menu is open */}
+      {isMobile && isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsMobileMenuOpen(false)} />
       )}
     </div>
   )
