@@ -8,6 +8,7 @@
   "main": "test-db.js",
   "scripts": {
     "test": "NODE_ENV=test jest",
+    "test:coverage": "NODE_ENV=test jest --coverage",
     "dev": "nodemon --legacy-watch app.js",
     "start": "node app.js"
   },

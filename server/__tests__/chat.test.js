@@ -37,3 +37,22 @@ describe("POST /api/chat", () => {
     expect(res.body).toHaveProperty("reply");
   });
 });
+
+describe("POST /api/chat - edge cases", () => {
+  it("should return 401 without token", async () => {
+    const res = await request(app)
+      .post("/api/chat")
+      .send({ message: "토큰 없이 요청" });
+
+    expect(res.statusCode).toBe(401);
+  });
+
+  it("should handle missing message field", async () => {
+    const res = await request(app)
+      .post("/api/chat")
+      .set("Authorization", `Bearer ${token}`)
+      .send({});
+
+    expect([400, 500]).toContain(res.statusCode); // 실제 구현에 따라 조정
+  });
+});

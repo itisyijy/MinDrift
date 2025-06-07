@@ -34,3 +34,35 @@ describe("GET /auth/me", () => {
     expect(res.body).toHaveProperty("username", "Me Test");
   });
 });
+
+describe("GET /auth/me - Invalid Token", () => {
+  it("should return 403 for invalid token", async () => {
+    const res = await request(app)
+      .get("/auth/me")
+      .set("Authorization", "Bearer invalid.token.here");
+
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("PUT /auth/username - Change username", () => {
+  it("should update username successfully", async () => {
+    const res = await request(app)
+      .put("/auth/username")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ newUsername: "Updated Me" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty("newUsername", "Updated Me");
+  });
+
+  it("should return 400 for empty username", async () => {
+    const res = await request(app)
+      .put("/auth/username")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ newUsername: "" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("message", "New username is required");
+  });
+});

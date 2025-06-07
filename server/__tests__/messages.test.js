@@ -42,3 +42,18 @@ describe("GET /api/messages", () => {
     expect(res.body.length).toBeGreaterThan(0);
   });
 });
+
+describe("GET /api/messages - Edge Cases", () => {
+  it("should return 401 if token is missing", async () => {
+    const res = await request(app).get("/api/messages");
+    expect(res.statusCode).toBe(401);
+  });
+
+  it("should return 403 if token is invalid", async () => {
+    const res = await request(app)
+      .get("/api/messages")
+      .set("Authorization", "Bearer invalid.token.here");
+
+    expect(res.statusCode).toBe(403);
+  });
+});

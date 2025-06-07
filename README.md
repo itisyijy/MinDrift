@@ -149,9 +149,14 @@ server/
 
 ## 🧪 Testing
 
+**Please execute `npm install` before testing at `server/` and `client/`**
+
 - **Jest-based test suite implemented**
 - Located in `__tests__` with route-specific tests
 - Ensure `.env` includes valid OpenAI API key for test success
+- Execute `npm run test` or `npm run test:coverage` at `server/`. (Details in `server/coverage/lcov-report/index.html`)
+- GitHub Action is implemented.
+- Tech-demo webpage for implementing functions in practice. Please execute `npm run dev` and access to [`http://localhost:8080/demo.html`](http://localhost:8080/demo.html).
 
 ---
 

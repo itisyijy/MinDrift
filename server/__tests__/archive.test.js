@@ -46,3 +46,23 @@ describe("GET /api/diary/archive", () => {
     expect(res.body).toHaveProperty("diary");
   });
 });
+
+describe("GET /api/diary/archive - edge cases", () => {
+  it("should return 400 if no date is provided", async () => {
+    const res = await request(app)
+      .get("/api/diary/archive")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("error", "Date is required (YYYY-MM-DD)");
+  });
+
+  it("should return empty diary for non-existent date", async () => {
+    const res = await request(app)
+      .get("/api/diary/archive?date=1999-01-01")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty("diary", null);
+    expect(Array.isArray(res.body.messages)).toBe(true);
+  });
+});

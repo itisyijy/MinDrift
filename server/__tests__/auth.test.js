@@ -31,3 +31,36 @@ describe("Auth API", () => {
     expect(res.body).toHaveProperty("token");
   });
 });
+
+describe("Auth API - Additional Cases", () => {
+  it("should return 409 on duplicate registration", async () => {
+    const res = await request(app).post("/auth/register").send({
+      user_id: "testuser",
+      username: "Test Duplicate",
+      password: "password123",
+    });
+
+    expect(res.statusCode).toBe(409);
+    expect(res.body).toHaveProperty("message", "User ID already exists");
+  });
+
+  it("should return 401 for non-existent user login", async () => {
+    const res = await request(app).post("/auth/login").send({
+      user_id: "nonexistent",
+      password: "anything",
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.text).toBe("No user");
+  });
+
+  it("should return 401 for wrong password", async () => {
+    const res = await request(app).post("/auth/login").send({
+      user_id: "testuser",
+      password: "wrongpassword",
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.text).toBe("Wrong password");
+  });
+});

@@ -58,4 +58,81 @@ describe("POST /api/diary/from-history", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty("reply");
   });
+
+  it("should return 400 if user has no chat history", async () => {
+    await request(app).post("/auth/register").send({
+      user_id: "nohistoryuser",
+      username: "No History",
+      password: "123456",
+    });
+
+    const loginRes = await request(app).post("/auth/login").send({
+      user_id: "nohistoryuser",
+      password: "123456",
+    });
+
+    const noHistoryToken = loginRes.body.token;
+
+    const res = await request(app)
+      .post("/api/diary/from-history")
+      .set("Authorization", `Bearer ${noHistoryToken}`);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("error", "No chat history");
+  });
+});
+
+describe("POST /api/diary", () => {
+  it("should return 400 if diary content is missing", async () => {
+    const res = await request(app)
+      .post("/api/diary")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ diary: "" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.text).toBe("Diary content is required");
+  });
+
+  it("should generate diary from direct text", async () => {
+    const res = await request(app)
+      .post("/api/diary")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ diary: "오늘은 정말 즐거운 하루였다!" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty("reply");
+  });
+});
+
+describe("GET /api/diary/archive", () => {
+  it("should return 400 if no date is provided", async () => {
+    const res = await request(app)
+      .get("/api/diary/archive")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("error", "Date is required (YYYY-MM-DD)");
+  });
+});
+
+describe("GET /api/diary/id-by-date", () => {
+  it("should return 404 for nonexistent diary entry", async () => {
+    const res = await request(app)
+      .get("/api/diary/id-by-date?date=1999-12-31")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toHaveProperty("error", "No diary entry for that date");
+  });
+});
+
+describe("DELETE /api/diary/:id", () => {
+  it("should return 404 for nonexistent diary ID", async () => {
+    const res = await request(app)
+      .delete("/api/diary/99999")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toHaveProperty("error", "Diary not found");
+  });
 });
