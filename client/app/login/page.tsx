@@ -23,7 +23,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const response = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
@@ -33,20 +33,35 @@ export default function LoginPage() {
           password,
         }),
       });
-
+  
       if (!response.ok) {
         const errText = await response.text();
         alert("❌ Login Failed: " + errText);
         return;
       }
-
+  
       const data = await response.json();
       console.log("✅ Login Success:", data);
-
+  
+      // Save JWT
       localStorage.setItem("jwt", data.token);
-      localStorage.setItem("username", data.username);
-      console.log("username from login:", data.username);
-
+  
+      // 최신 username을 /auth/me에서 다시 받아옴
+      const profileRes = await fetch(`${BASE_URL}/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${data.token}`,
+        },
+      });
+  
+      if (profileRes.ok) {
+        const profile = await profileRes.json();
+        localStorage.setItem("username", profile.username); // 최신 username 저장
+      } else {
+        // fallback: 로그인 응답의 username 사용
+        localStorage.setItem("username", data.username);
+      }
+  
       router.push("/chat");
     } catch (error) {
       console.error("❌ Fail Login Request:", error);

@@ -19,19 +19,26 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
 
+  const allowedRegex = /^[a-zA-Z0-9~!@#$%]+$/
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+  
+    if (!username || !userid || !password || !confirmPassword) {
+      alert("Please fill in all fields.")
+      return
+    }
   
     if (password !== confirmPassword) {
       setError("Passwords do not match")
       return
     }
-
-    // ✅ Check all fields are filled
-  if (!username || !userid || !password || !confirmPassword) {
-    alert("Please fill in all fields.")
-    return
-  }
+  
+    // Allow only specific characters
+    if (!allowedRegex.test(username) || !allowedRegex.test(userid) || !allowedRegex.test(password)) {
+      setError("Only letters, numbers, and ~!@#$% characters are allowed.")
+      return
+    }
   
     setError("")
   
