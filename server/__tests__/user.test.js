@@ -1,4 +1,3 @@
-// ✅ 맨 위 최상단에 위치시키는 것이 가장 안전합니다
 jest.setTimeout(20000); // 테스트 실행 시간 여유 확보
 require("dotenv").config(); // .env 로드
 

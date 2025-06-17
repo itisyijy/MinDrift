@@ -1,4 +1,3 @@
-// ✅ 최상단에 설정
 jest.setTimeout(20000);
 require("dotenv").config();
 
@@ -16,7 +15,6 @@ app.use("/api", diaryRoutes);
 let token = "";
 
 beforeAll(async () => {
-  // ✅ 사용자 등록 및 로그인
   await request(app).post("/auth/register").send({
     user_id: "diaryuser",
     username: "Diary Test",
@@ -30,13 +28,11 @@ beforeAll(async () => {
 
   token = res.body.token;
 
-  // ✅ 토큰에서 user_id 추출
   const jwtPayload = JSON.parse(
     Buffer.from(token.split(".")[1], "base64").toString()
   );
   const userId = jwtPayload.id;
 
-  // ✅ 사용자 메시지 삽입
   await new Promise((resolve, reject) => {
     db.run(
       "INSERT INTO messages (user_id, role, content) VALUES (?, 'user', ?)",
