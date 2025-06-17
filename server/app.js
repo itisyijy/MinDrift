@@ -8,7 +8,6 @@ const authRoutes = require("./routes/auth");
 const chatRoutes = require("./routes/chat");
 const diaryRouter = require("./routes/diary");
 const db = require("./db/db");
-const { deleteMessages } = require("./cron");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -31,26 +30,6 @@ app.use("/auth", authRoutes);
 app.use("/api", chatRoutes);
 app.use("/api", diaryRouter);
 
-// Delete old messages on server start if date has changed
-function resetMessagesIfStale() {
-  db.get(
-    `SELECT MAX(date(created_at)) as last_date FROM messages`,
-    (err, row) => {
-      if (err) return console.error("Reset check failed:", err.message);
-      const today = new Date().toISOString().split("T")[0];
-      const lastDate = row?.last_date;
-
-      if (lastDate && lastDate < today) {
-        console.log("Resetting outdated chat logs");
-        deleteMessages();
-      } else {
-        console.log("Chat logs are up-to-date");
-      }
-    }
-  );
-}
-
 app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-  resetMessagesIfStale();
+  console.log(`Server is listening.`);
 });
