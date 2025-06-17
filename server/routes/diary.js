@@ -40,7 +40,25 @@ async function generateDiarySummary(diaryText, username) {
   const messages = [
     {
       role: "system",
-      content: `너는 감정 중심의 일기 코치야. 사용자 ${username}의 일기를 분석해 하루를 요약하고 아래 HTML 구조에 맞게 출력해. class 속성은 수정하지 마. 스타일은 포함하지 마. <div class="diary-entry"><h2 class="diary-date">📅 <strong>${today}</strong></h2><h3 class="section-title">📝 <strong>오늘의 일기</strong></h3><div class="diary-body"><p>...</p></div><h3 class="section-title">🕰️ <strong>오늘의 흐름</strong></h3><ul class="diary-flow"><li><span class="time">오전 –</span> ...</li><li><span class="time">오후 –</span> ...</li><li><span class="time">밤 –</span> ...</li></ul><h3 class="section-title">💭 <strong>감정 상태</strong></h3><div class="emotion-status"><p><strong>[이모지 감정]</strong></p><p>[감정 설명]</p></div><h3 class="section-title">📌 <strong>오늘의 한 줄</strong></h3><blockquote class="one-line-summary">[한 줄 요약]</blockquote></div>`,
+      // content: `너는 감정 중심의 일기 코치야. 사용자 ${username}의 일기를 분석해 하루를 요약하고 아래 HTML 구조에 맞게 출력해. class 속성은 수정하지 마. 스타일은 포함하지 마. <div class="diary-entry"><h2 class="diary-date">📅 <strong>${today}</strong></h2><h3 class="section-title">📝 <strong>오늘의 일기</strong></h3><div class="diary-body"><p>...</p></div><h3 class="section-title">🕰️ <strong>오늘의 흐름</strong></h3><ul class="diary-flow"><li><span class="time">오전 –</span> ...</li><li><span class="time">오후 –</span> ...</li><li><span class="time">밤 –</span> ...</li></ul><h3 class="section-title">💭 <strong>감정 상태</strong></h3><div class="emotion-status"><p><strong>[이모지 감정]</strong></p><p>[감정 설명]</p></div><h3 class="section-title">📌 <strong>오늘의 한 줄</strong></h3><blockquote class="one-line-summary">[한 줄 요약]</blockquote></div>`,
+      content: `You are an emotion-focused diary coach. Analyze user ${username}'s diary entry, summarize their day, and output it according to the HTML structure below.
+            Do not modify the 'class' attributes. Do not include styles.
+            <div class="diary-entry">
+            <h2 class="diary-date">📅 <strong>${today}</strong></h2>
+            <h3 class="section-title">📝 <strong>Today's Diary</strong></h3>
+            <div class="diary-body">
+            <p>...</p>
+            </div>
+            <h3 class="section-title">🕰️ <strong>Today's Flow</strong></h3>
+            <ul class="diary-flow">
+            <li><span class="time">Morning –</span> ...</li>
+            <li><span class="time">Afternoon –</span> ...</li>
+            <li><span class="time">Night –</span> ...</li>
+            </ul>
+            <h3 class="section-title">💭 <strong>Emotional State</strong></h3>
+            <div class="emotion-status"><p><strong>[Emoji Emotion]</strong></p><p>[Emotion Description]</p></div>
+            <h3 class="section-title">📌 <strong>Today's One-Liner</strong></h3>
+            <blockquote class="one-line-summary">[One-Line Summary]</blockquote></div>`,
     },
     {
       role: "user",
@@ -81,7 +99,7 @@ router.post("/diary", authenticateToken, async (req, res) => {
 router.post("/diary/from-history", authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const username = req.user.username;
-  
+
   console.log(username);
 
   try {

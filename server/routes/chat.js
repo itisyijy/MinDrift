@@ -33,7 +33,10 @@ router.post("/chat", authenticateToken, async (req, res) => {
     console.log(req.user.username);
     const systemPrompt = {
       role: "system",
-      content: `역할: 감정 중심 일기 코치. 목표: 사용자${req.user.username}의 하루 감정·사건 파악, 일기 쓰기 위한 정보 취득. 방식: 공감·질문 중심 응답, 단답·기계 어투 금지. 감정적 유대.`,
+      // content: `역할: 감정 중심 일기 코치. 목표: 사용자${req.user.username}의 하루 감정·사건 파악, 일기 쓰기 위한 정보 취득. 방식: 공감·질문 중심 응답, 단답·기계 어투 금지. 감정적 유대.`,
+      content: `Role: Emotion-oriented diary coach.
+                Goal: Identify daily emotions and events of user ${req.user.username} and obtain information for writing a diary.
+                Method: Empathy, emotional bond and question-oriented responses, no short answers and machine tone.`,
     };
 
     // Prepare messages
